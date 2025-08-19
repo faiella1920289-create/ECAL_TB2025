@@ -9,8 +9,6 @@
    myStyle->SetTitleColor(1);
    myStyle->SetStatColor(0);
 
-   myStyle->SetLabelSize(0.03,"xyz"); // size of axis values
-
    myStyle->SetHistLineWidth(2);
    myStyle->SetHistLineColor(kBlue+1);
 
@@ -30,8 +28,8 @@
    myStyle->SetTitleFont(62, "X");
    myStyle->SetTitleFont(62, "Y");
 
-   myStyle->SetLabelSize(0.05, "X");
-   myStyle->SetTitleSize(0.05, "X");
+   myStyle->SetLabelSize(0.04, "X");
+   myStyle->SetTitleSize(0.04, "X");
 
    myStyle->SetLabelSize(0.05, "Y");
    myStyle->SetTitleSize(0.05, "Y");
@@ -42,13 +40,13 @@
    // default canvas positioning
 //   myStyle->SetCanvasDefX(900);
 //  myStyle->SetCanvasDefY(20);
-   myStyle->SetCanvasDefH(600);
-   myStyle->SetCanvasDefW(800);
+   //myStyle->SetCanvasDefH(600);
+   //myStyle->SetCanvasDefW(800);
 
-   myStyle->SetPadBottomMargin(0.3);
-   myStyle->SetPadTopMargin(0.2);
+   myStyle->SetPadBottomMargin(0.1);
+   myStyle->SetPadTopMargin(0.1);
    myStyle->SetPadLeftMargin(0.2);
-   myStyle->SetPadRightMargin(0.2);
+   myStyle->SetPadRightMargin(0.1);
    myStyle->SetPadTickX(1);
    myStyle->SetPadTickY(1);
    myStyle->SetFrameBorderMode(0);
@@ -60,11 +58,12 @@
 //   myStyle->SetPaperSize(21, 28);
 
    myStyle->SetStatBorderSize(0);
-   myStyle->SetStatColor(1184);
-   myStyle->SetStatX(0.75);
-   myStyle->SetStatY(0.77);
+   myStyle->SetStatColor(0);
+   myStyle->SetStatX(0.85);
+   myStyle->SetStatY(0.87);
    myStyle->SetStatFont(42);
-   myStyle->SetOptStat("e");// Show overflow and underflow as well
+   myStyle->SetStatFontSize(0.03);
+   myStyle->SetOptStat(0);
    myStyle->SetOptFit(111);
    myStyle->SetPalette(1);
 

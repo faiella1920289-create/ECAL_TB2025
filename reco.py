@@ -1,13 +1,16 @@
-import uproot
-import ROOT
-import argparse
-import sys
+import os, json, uproot, argparse, sys, time, ROOT
+import awkward as ak
 import numpy as np
-import time
-from array import array
-
 import reco_functions
-import plot_functions
+import pandas as pd
+import plot_functions_in_memory as plot_functions
+
+
+def retrieve_conf(filename):
+  with open(filename, 'r') as f:
+    json_dict = json.load(f)
+    if json_dict["active_ch_list"] == None: json_dict["active_ch_list"] = slice(None)
+  return json_dict
 
 
 def main(arguments):
@@ -16,131 +19,112 @@ def main(arguments):
 
     # input parameters
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument("-i", "--input", type=str, required=True, help="input ROOT file with unpacked tree")
-    parser.add_argument("-r", "--run", type=str, required=True, help="run number")
-    parser.add_argument("-s", "--spill", type=str, required=True, help="spill number")
-    parser.add_argument("-de", "--eta-min", type=int, required=True, help="eta min")
-    parser.add_argument("-dE", "--eta-max", type=int, required=True, help="eta max")
-    parser.add_argument("-dp", "--phi-min", type=int, required=True, help="phi min")
-    parser.add_argument("-dP", "--phi-max", type=int, required=True, help="phi max")
-    parser.add_argument("-o", "--reco-output-dir", type=str, required=True, help="directory for reco output")
+    parser.add_argument("-i", f"--input", type=str, required=True, help="input ROOT file with unpacked tree")
+    parser.add_argument("-r", f"--run", type=str, required=True, help="run number")
+    parser.add_argument("-s", f"--spill", type=str, required=True, help="spill number")
+    parser.add_argument("-ro", f"--reco-output-dir", type=str, required=True, help="directory for reco output")
+    parser.add_argument("-ej", f"--ecal-json", type=str, required=False, help="ecal reco configuration", default="ecal_conf.json")
+    parser.add_argument("-mj", f"--mcp-json", type=str, required=False, help="mcp reco configuration", default="mcp_conf.json")
+    parser.add_argument("-ct", f"--compression-type", type=str, required=False, help="mcp reco configuration", default="lz4")
+    parser.add_argument("-d", f"--data", type=str, required=True, help="csv file with data to plot")
+    parser.add_argument("-p", f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
+    parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
+
     args = parser.parse_args(arguments)
-    #print(f"------- DEBUG -------\nargs = {args}")
-    if args.eta_min >= args.eta_max:
-        print("ERROR -> eta min > eta max")
-        sys.exit(1)
-    if args.phi_min >= args.phi_max:
-        print("ERROR -> phi min > phi max")
-        sys.exit(1)
-    input_file = args.input
-    run = args.run
-    spill = args.spill
-    eta_min = args.eta_min
-    eta_max = args.eta_max
-    phi_min = args.phi_min
-    phi_max = args.phi_max
-    reco_dir = args.reco_output_dir
+
+
+
+
+    ecal_json_dict, mcp_json_dict = (retrieve_conf(filename) for filename in [args.ecal_json, args.mcp_json])
 
     # open input file
-    file = uproot.open(input_file)
+    file = uproot.open(args.input)
     tree = file["h4"]
 
-    # mapping eta and phi with channels
-    ieta, iphi = reco_functions.map_eta_phi()
-    # mask for central channel and 5x5 matrix
-    mask_central = reco_functions.mask_central_channel(eta_min, phi_min)
-    central_idx = np.where(mask_central)[0][0]
-    # print(f"------- DEBUG -------\nmask_central: {mask_central}")
-    mask_5x5 = reco_functions.mask_5x5_matrix(eta_min, phi_min, eta_max, phi_max)
-    # print(f"------- DEBUG -------\nmask_5x5: {mask_5x5}")
-    ieta_5x5 = ieta[mask_5x5]
-    iphi_5x5 = iphi[mask_5x5]
-    mask_5x5_central = reco_functions.mask_5x5_central(ieta_5x5, iphi_5x5, eta_min, phi_min)
-    # print(f"------- DEBUG -------\nmask_5x5_central: {mask_5x5_central}")
-    
-    # read branch xtal_sample
-    waves = tree["xtal_sample"].array(library="np")
-    # print(f"------- DEBUG -------\nwaves.shape: {waves.shape}")
-    amplitudes_corr, is_valid, gain_is_1 = reco_functions.read_data(waves)
-    # print(f"------- DEBUG -------\namplitudes_corr.shape: {amplitudes_corr.shape}")
-    # plot_functions.plot_central_waveform(amplitudes_corr, central_idx, output_path=f"./{reco_dir}/central_waveforms.pdf")  # plot of all waves for central channel
+    ecal_waves = tree["xtal_sample"].array(library="np")[:, ecal_json_dict["active_ch_list"], :]
+    ecal_waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(ecal_waves)
 
-    mask_sig_amp = reco_functions.mask_amplitudes(amplitudes_corr, central_idx, threshold=150)  # mask for signal amplitude above threshold
-    waves_amp_masked = amplitudes_corr[mask_sig_amp, :]
-    # print(f"------- DEBUG -------\nwaves_amp_masked.shape: {waves_amp_masked.shape}")
-    mask_rms_bline, baselines, signal_window = reco_functions.mask_rms_baseline(waves_amp_masked, central_idx, threshold=20, pre=5, post=10)  # mask for baseline rms, baseline subtraction and definition of signal window
-    waves_rms_masked = waves_amp_masked[mask_rms_bline, :]
-    signal_window = signal_window[mask_rms_bline, :]
-    # print(f"------- DEBUG -------\nwaves_rms_masked.shape: {waves_rms_masked.shape}")
-    # print(f"------- DEBUG -------\nsignal_window.shape: {signal_window.shape}")
-    nevents, nchannels, nsamples = waves_rms_masked.shape
-    waves_masked = waves_rms_masked - np.repeat(baselines[mask_rms_bline, :, np.newaxis], nsamples, axis=2)  # baseline subtraction
-    signal_window = signal_window - np.repeat(baselines[mask_rms_bline, :, np.newaxis], signal_window.shape[2], axis=2)
-    # print(f"------- DEBUG -------\nwaves_rms_masked.shape: {waves_masked.shape}")
-    # print(f"------- DEBUG -------\nsignal_window.shape: {signal_window.shape}")
-    # plot_functions.plot_central_waveform(waves_masked, central_idx, output_path=f"./{reco_dir}/central_waveforms_masked.pdf")  # plot of all waves for central channel after masking
+    mcp_waves = tree["dgtz_sample"].array(library="np")[:, mcp_json_dict["active_ch_list"], :]
+    mcp_waves = 4096 - mcp_waves #must be inverted if the signal are with negative rising slope
 
-    # charge_sum in 5x5 matrix
-    charge_5x5, charge_sum_5x5, charge_central = reco_functions.charge_5x5(signal_window, mask_5x5, mask_5x5_central, charge_thr=100)
-    # index of the maximum sample
-    sample_max = np.argmax(waves_masked, axis=2)
-    # mean of all values
-    values_mean = np.mean(waves_masked, axis=2)
-    # std of all values
-    values_std = np.std(waves_masked, axis=2)
-    # maximum sample
-    values_max = np.max(waves_masked, axis=2)
-    # amplitude_map of the 5x5 matrix
-    amplitude_map_5x5 = charge_5x5 / charge_sum_5x5[:, np.newaxis]
+    print(f"reading data, json and cl arguments took {-time_start +time.time():.1f}")
 
-    # data_to_plot_nevents.csv creation
-    f = ROOT.TFile(f"./{reco_dir}/{run}_{spill}_reco.root", "RECREATE")
-    tree_nevents = ROOT.TTree("h4_reco", "")
-    charge_sum_5x5_branch = array('f', [0.0])
-    charge_central_branch = array('f', [0.0])
-    ieta_branch = array('f', [0.0] * nchannels)
-    iphi_branch = array('f', [0.0] * nchannels)
-    sample_max_branch = array('f', [0.0] * nchannels)
-    values_mean_branch = array('f', [0.0] * nchannels)
-    values_std_branch = array('f', [0.0] * nchannels)
-    values_max_branch = array('f', [0.0] * nchannels)
-    ieta_5x5_branch = array('f', [0.0] * 25)
-    iphi_5x5_branch = array('f', [0.0] * 25)
-    amplitude_map_5x5_branch = array('f', [0.0] * 25)
-    tree_nevents.Branch("charge_sum_5x5", charge_sum_5x5_branch, "charge_sum_5x5/F")
-    tree_nevents.Branch("charge_central", charge_central_branch, f"charge_central/F")
-    tree_nevents.Branch("ieta", ieta_branch, f"ieta[{nchannels}]/F")
-    tree_nevents.Branch("iphi", iphi_branch, f"iphi[{nchannels}]/F")
-    tree_nevents.Branch("sample_max", sample_max_branch, f"sample_max[{nchannels}]/F")
-    tree_nevents.Branch("values_mean", values_mean_branch, f"values_mean[{nchannels}]/F")
-    tree_nevents.Branch("values_std", values_std_branch, f"values_std[{nchannels}]/F")
-    tree_nevents.Branch("values_max", values_max_branch, f"values_max[{nchannels}]/F")
-    tree_nevents.Branch("ieta_5x5", ieta_5x5_branch, f"ieta_5x5[{25}]/F")
-    tree_nevents.Branch("iphi_5x5", iphi_5x5_branch, f"iphi_5x5[{25}]/F")
-    tree_nevents.Branch("amplitude_map_5x5", amplitude_map_5x5_branch, f"amplitude_map_5x5[{25}]/F")
-    for i in range(nevents):
-        charge_sum_5x5_branch[0] = charge_sum_5x5[i]
-        for ch in range(nchannels):
-            ieta_branch[ch] = ieta[ch]
-            iphi_branch[ch] = iphi[ch]
-            # print(ieta[ch], iphi[ch])
-            sample_max_branch[ch] = sample_max[i][ch]
-            values_mean_branch[ch] = values_mean[i][ch]
-            values_std_branch[ch] = values_std[i][ch]
-            values_max_branch[ch] = values_max[i][ch]
-            if ch < 25:
-                ieta_5x5_branch[ch] = ieta_5x5[ch]
-                iphi_5x5_branch[ch] = iphi_5x5[ch]
-                amplitude_map_5x5_branch[ch] = amplitude_map_5x5[i][ch]
-        tree_nevents.Fill()
-    tree_nevents.Write()
-    print(f"Tree h4_reco written in {reco_dir}/{run}_{spill}_reco.root")
-    f.Close()
-    
+    time_ecal = time.time()
+    mask_ecal, reco_dict_ecal = reco_functions.generic_reco(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
+    print(f"ecal reco took {-time_ecal +time.time():.1f} s")
+
+    time_mcp = time.time()
+    mask_mcp, reco_dict_mcp = reco_functions.generic_reco(mcp_waves, "mcp", **mcp_json_dict["reco_conf"])
+    print(f"mcp reco took {-time_mcp +time.time():.1f} s")
+
+    time_hodo = time.time()
+    reco_dict_hodo = {}
+    mask_hodo = np.ones(mask_mcp.shape[0], dtype=bool) #to be generic
+    coords_list = ["x1", "x2", "y1", "y2"]
+    branches = tree.arrays(
+        [f"hodo_{coord}_nclusters" for coord in coords_list] +
+        [f"hodo_{coord}_pos" for coord in coords_list],
+        library="ak"
+    )
+
+    for coord in coords_list:
+        clus = branches[f"hodo_{coord}_nclusters"]
+        pos = branches[f"hodo_{coord}_pos"]
+        mask = (clus > 0)
+
+        pos_first_cluster = ak.to_numpy(ak.where(mask, ak.firsts(pos), -999))
+        mask_single_cluster = ak.to_numpy(clus == 1)
+        average_all_clusters = ak.to_numpy(ak.where(mask, ak.sum(pos, axis=1) / clus, -999.0 ))
+
+        reco_dict_hodo.update({
+            f"hodo_{coord}_cl0_pos": pos_first_cluster,
+            f"hodo_{coord}_single_cl_flag": mask_single_cluster,
+            f"hodo_{coord}_avg_pos": average_all_clusters,
+        })
+    print(f"hodo reco took {-time_hodo +time.time():.1f} s")
+
+
+
+    time_merge = time.time()
+    mask_global = np.logical_and.reduce((mask_ecal, mask_mcp, mask_hodo)) #to be generic
+    reco_dict = {}
+    reco_dict.update(reco_dict_ecal)
+    reco_dict.update(reco_dict_mcp)
+    reco_dict.update(reco_dict_hodo)
+
+    for key in reco_dict: reco_dict[key] = reco_dict[key][mask_global, ...]
+
+    print(f"merging took {-time_merge + time.time():.1f} s")
+    print(f"Total time elapsed for reco: {time.time() - time_start:.4f} s")
+
+
+
+    time_plot = time.time()
+    plotconf_df = pd.read_csv(args.plot_list, sep=",")
+    plotconf_df = plotconf_df.fillna("")
+
+    # os.system(f"cp index.php {outputfolder}")
+
+    ROOT.gROOT.LoadMacro("root_logon.C")
+
+    os.system(f"mkdir {args.plot_output_folder}/prova")
+    plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, f"{args.plot_output_folder}/prova"), axis=1)
+
+
+
+
     time_end = time.time()
-    print(f"Time elapsed for reco: {time_end - time_start:.4f} s")
+    print(f"Time elapsed for plotting: {time_end - time_plot:.4f} s")
 
+    time_write = time.time()
+
+    branch_types = {k: (v.dtype, v.shape[1:]) for k, v in reco_dict.items()}
+    compression_map = {"zlib": uproot.compression.ZLIB(level=1), "lz4": uproot.compression.LZ4(level=1), "none": None}
+    with uproot.recreate(f"{args.reco_output_dir}/{args.run}_{args.spill}_reco.root", compression=compression_map[args.compression_type]) as f:
+        tree = f.mktree("tree", branch_types)
+        tree.extend(reco_dict)
+
+    print(f"writing reco output took {-time_write + time.time():.1f} s")
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-

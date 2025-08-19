@@ -1,122 +1,160 @@
 import numpy as np
+import eta_phi_ch_map
+from scipy import ndimage
 
-
-def map_eta_phi() :
-    ieta = np.array([
-        55, 55, 55, 55, 55, 54, 54, 54, 54, 54, 53, 53, 53, 53, 53, 52, 52, 52, 52, 52, 51, 51, 51, 51, 51,
-        50, 50, 50, 50, 50, 49, 49, 49, 49, 49, 48, 48, 48, 48, 48, 47, 47, 47, 47, 47, 46, 46, 46, 46, 46,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        50, 50, 50, 50, 50, 49, 49, 49, 49, 49, 48, 48, 48, 48, 48, 47, 47, 47, 47, 47, 46, 46, 46, 46, 46,
-        50, 50, 50, 50, 50, 49, 49, 49, 49, 49, 48, 48, 48, 48, 48, 47, 47, 47, 47, 47, 46, 46, 46, 46, 46,
-        55, 55, 55, 55, 55, 54, 54, 54, 54, 54, 53, 53, 53, 53, 53, 52, 52, 52, 52, 52, 51, 51, 51, 51, 51,
-        55, 55, 55, 55, 55, 54, 54, 54, 54, 54, 53, 53, 53, 53, 53, 52, 52, 52, 52, 52, 51, 51, 51, 51, 51,
-        56, 56, 56, 56, 56, 57, 57, 57, 57, 57, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 60, 60, 60, 60, 60,
-        56, 56, 56, 56, 56, 57, 57, 57, 57, 57, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 60, 60, 60, 60, 60,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        56, 56, 56, 56, 56, 57, 57, 57, 57, 57, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 60, 60, 60, 60, 60,
-        90, 90, 90, 90, 90, 89, 89, 89, 89, 89, 88, 88, 88, 88, 88, 87, 87, 87, 87, 87, 86, 86, 86, 86, 86
-    ])
-    iphi = np.array([
-        10,  9,  8,  7,  6,  6,  7,  8,  9, 10, 10,  9,  8,  7,  6,  6,  7,  8,  9, 10, 10,  9,  8,  7,  6,
-        15, 14, 13, 12, 11, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1,
-        10,  9,  8,  7,  6,  6,  7,  8,  9, 10, 10,  9,  8,  7,  6,  6,  7,  8,  9, 10, 10,  9,  8,  7,  6,
-        5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1,
-        15, 14, 13, 12, 11, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11,
-        1,  2,  3,  4,  5,  5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1,  1,  2,  3,  4,  5,
-        6,  7,  8,  9, 10, 10,  9,  8,  7,  6,  6,  7,  8,  9, 10, 10,  9,  8,  7,  6,  6,  7,  8,  9, 10,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 11, 12, 13, 14, 15,
-        5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1,  1,  2,  3,  4,  5,  5,  4,  3,  2,  1
-        ])
-    return ieta, iphi
-
-
-def read_data(waves):
+def decode_ecal_waves(waves):
     bit13_mask = 1 << 13 #validity bit
     bit12_mask = 1 << 12 #gain bit
     amp_mask   = 0x0FFF #amplitude mask
     is_valid = (waves & bit13_mask) != 0
     gain_is_1 = (waves & bit12_mask) != 0
     amplitudes = waves & amp_mask
-    amplitudes_corr = amplitudes.copy()
-    amplitudes_corr[gain_is_1] *= 10
-    amplitudes_corr[~is_valid] = 0
-    return amplitudes_corr, is_valid, gain_is_1
+    amplitudes[gain_is_1] *= 10
+    #amplitudes[~is_valid] = 0
+    return amplitudes, is_valid, gain_is_1
+
+def split(waveforms, threshold=20, pre=5, post=10):
+
+    # Assume waveforms is shape (E, C, S)
+    E, C, S = waveforms.shape
+
+    # Step 1: Find argmax along sample axis (shape: E x C)
+    argmax_idx = np.argmax(waveforms, axis=2)  # shape (E, C)
+
+    # Step 2: Build offsets
+    window_offsets = np.arange(-5, 10).reshape(1, 1, -1)         # shape (1,1,15)
+    baseline_offsets = np.arange(-15, -5).reshape(1, 1, -1)      # shape (1,1,10)
+
+    # Expand argmax index for broadcasting
+    argmax_exp = argmax_idx[:, :, np.newaxis]  # shape (E, C, 1)
+
+    # Add offsets and wrap with modulo S to stay in bounds
+    window_indices   = (argmax_exp + window_offsets) % S        # shape (E, C, 15)
+    baseline_indices = (argmax_exp + baseline_offsets) % S      # shape (E, C, 10)
+
+    # Build broadcasted event/channel indices
+    event_idx = np.arange(E)[:, None, None]
+    chan_idx  = np.arange(C)[None, :, None]
+
+    # Extract waveform windows and baseline windows
+    window_waveforms   = waveforms[event_idx, chan_idx, window_indices]      # (E, C, 15)
+    baseline_waveforms = waveforms[event_idx, chan_idx, baseline_indices]    # (E, C, 10)
+
+    # Step 3: Compute baseline mean
+    baseline = np.mean(baseline_waveforms, axis=2)  # shape (E, C)
+
+    return argmax_idx, baseline, window_waveforms
 
 
-def mask_central_channel(eta_min, phi_min):
-    ieta, iphi = map_eta_phi()
-    mask_central = (ieta == (eta_min+2)) & (iphi == (phi_min+2))
-    return mask_central
+def find_5x5(charge_mean, ieta, iphi):
+    fake_mask = np.full(ieta.shape, True)
+    mask_5x5 = np.full(ieta.shape, True)
+
+    while True:
+      charge_mean[~fake_mask] = 0
+      seed_ch = np.argmax(charge_mean)
+      ieta_seed, iphi_seed = ieta[seed_ch], iphi[seed_ch]
+      mask_5x5 = np.logical_and(np.abs(ieta - ieta_seed) < 3, np.abs(iphi - iphi_seed) < 3)
+      mask_5x5[seed_ch] = False
+      seed_5x5_ratio = np.sum(charge_mean[mask_5x5]) * 24/np.sum(mask_5x5) / charge_mean[seed_ch]
+      if seed_5x5_ratio < 0.2:
+        fake_mask[seed_ch] = False
+        continue
+      else:
+        mask_5x5[seed_ch] = True
+        break
+    return mask_5x5, seed_ch
 
 
-def mask_5x5_matrix(eta_min, phi_min, eta_max, phi_max):
-    ieta, iphi = map_eta_phi()
-    mask_eta_maj = ieta >= eta_min
-    mask_eta_min = ieta <= eta_max
-    mask_phi_maj = iphi >= phi_min
-    mask_phi_min = iphi <= phi_max
-    mask_5x5 = mask_eta_maj & mask_eta_min & mask_phi_maj & mask_phi_min
-    return mask_5x5
+
+def generic_reco(
+  waves, detector_name,
+  signal_samples_pre_peak=5, signal_samples_post_peak=10,
+  charge_zerosup_peak_threshold=10, seed_charge_threshold=50,
+  do_5x5=True,
+  do_timing=False, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20
+):
+
+  max_idx, baselines, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
+
+  # mean of all values
+  values_mean = np.mean(waves, axis=2)
+
+  waves = waves - np.repeat(baselines[:, :, np.newaxis], waves.shape[2], axis=2)  # baseline subtraction
+
+  signal_window = signal_window - np.repeat(baselines[:, :, np.newaxis], signal_window.shape[2], axis=2)
+
+  # Build event and channel indices
+  event_idx = np.arange(waves.shape[0])[:, None]        # shape (E, 1)
+  chan_idx  = np.arange(waves.shape[1])[None, :]        # shape (1, C)
+  values_max = waves[event_idx, chan_idx, max_idx]  # shape (E, C)
+
+  mask_under_thr = values_max < charge_zerosup_peak_threshold
+
+  charge = np.sum(signal_window, axis=2)
+  charge[mask_under_thr] = 0
+
+  tWave = np.repeat(np.arange(0, waves.shape[2])[np.newaxis, :], charge.shape[1], axis=0)
+  tWave = np.repeat(tWave[np.newaxis, :], charge.shape[0], axis=0)
+  ich = np.repeat(np.arange(0, waves.shape[1])[np.newaxis, :], charge.shape[0], axis=0)
 
 
-def mask_5x5_central(ieta_5x5, iphi_5x5, eta_min, phi_min):
-    mask_eta = ieta_5x5 == (eta_min+2)
-    mask_phi = iphi_5x5 == (phi_min+2)
-    mask_5x5_central = mask_eta & mask_phi
-    return mask_5x5_central
+  return_dict = {}
+  mask_selected_events = np.ones((charge.shape[0],), dtype=bool)
+  det = detector_name
 
 
-def mask_amplitudes(amplitudes, central_idx, threshold=150):
-    #nevents, nchannels, nsamples = amplitudes.shape
-    amplitudes_central = amplitudes[:, central_idx, :]
-    mask_sig_amp = (amplitudes_central.max(axis=1) > 150).squeeze()
-    return mask_sig_amp
+  if do_5x5:
+    charge_mean = np.mean(charge, axis=0)
+    seed_ch = -999
+    ieta, iphi = eta_phi_ch_map.eta_phi_ch_map()
+
+    mask_5x5, seed_ch = find_5x5(charge_mean, ieta, iphi)
+
+    charge_seed = charge[:, seed_ch]
+    mask_low_charge_seed = charge_seed > seed_charge_threshold
+
+    # amplitude_map of the 5x5 matrix
+    charge_sum_5x5 = np.sum(charge[:, mask_5x5], axis=1)
+    charge_fraction_5x5 = charge / charge_sum_5x5[:, np.newaxis]
+
+    ieta_centroid = charge_fraction_5x5[:, mask_5x5] @ ieta[mask_5x5]
+    iphi_centroid = charge_fraction_5x5[:, mask_5x5] @ iphi[mask_5x5]
+
+    ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
+    iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
+
+    iphi_within_5x5 = iphi - iphi[0, seed_ch]
+    ieta_within_5x5 = ieta - ieta[0, seed_ch]
+
+    seed_ch = np.repeat(np.ones(1,)*seed_ch, charge_sum_5x5.shape[0], axis=0)
+
+    return_dict.update({
+      f"{det}_charge_sum_5x5": charge_sum_5x5, f"{det}_charge_seed": charge_seed,
+      f"{det}_iphi_within_5x5": iphi_within_5x5, f"{det}_ieta_within_5x5": ieta_within_5x5,
+      f"{det}_ieta": ieta, f"{det}_iphi": iphi,
+      f"{det}_charge_divided_5x5": charge_fraction_5x5, f"{det}_seed_ch": seed_ch,
+      f"{det}_ieta_centroid": ieta_centroid, f"{det}_iphi_centroid": iphi_centroid
+    })
+
+    mask_selected_events = mask_low_charge_seed
+
+  if do_timing:
+    rise = signal_window[:, :, (signal_samples_pre_peak - rise_samples_pre_peak):(signal_samples_pre_peak + rise_samples_post_peak)]
+    rise_interp = ndimage.zoom(rise, [1, 1, interpolation_factor])
+
+    peak_interp = rise_interp.max(axis=2)
+
+    pseudo_t = np.argmax(rise_interp > np.repeat((peak_interp*cf)[:, :, np.newaxis], rise_interp.shape[2], axis=2), axis=2).astype(float)
+    pseudo_t /= float(sampling_rate*interpolation_factor)
+    pseudo_t += (max_idx / sampling_rate)
+    return_dict.update({f"{det}_cf_time": pseudo_t, f"{det}_peak_interp": peak_interp})
+
+  return_dict.update({
+    f"{det}_peak_pos": max_idx, f"{det}_ich": ich,
+    f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_charge": charge,
+    f"{det}_wave": waves, f"{det}_t_wave": tWave
+  })
 
 
-def mask_rms_baseline(amplitudes, central_idx, threshold=20, pre=5, post=10):
-    nevents, nchannels, nsamples = amplitudes.shape
-    mask_rms_bline = np.ones(nevents, dtype=bool)
-    baselines = np.zeros((nevents, nchannels), dtype=amplitudes.dtype)
-    #print(f"------- DEBUG -------\n{baselines.shape}")
-    window_size = pre + post
-    signal_window = []
-    for ev in range(nevents):
-        #baseline
-        waveform_central = amplitudes[ev, central_idx, :]
-        max_idx = np.argmax(waveform_central)
-        if max_idx >= 15:
-            baseline_slice = slice(0, 10)
-        elif 8 <= max_idx < 15:
-            baseline_slice = slice(max(0, max_idx - 6), max_idx - 1)
-        else:
-            baseline_slice = slice(-10, None)
-        baselines[ev] = np.mean(amplitudes[ev, :, baseline_slice], axis=1)
-        baseline_central = waveform_central[baseline_slice]
-        rms_baseline_central = np.std(baseline_central)
-        if rms_baseline_central > threshold:
-            mask_rms_bline[ev] = False
-        #signal window
-        start = max(max_idx - pre, 0)
-        end = min(max_idx + post, nsamples)
-        if end - start < window_size:
-            if start == 0:
-                end = min(window_size, nsamples)
-            elif end == nsamples:
-                start = max(nsamples - window_size, 0)
-        signal_window.append(amplitudes[ev, :, start:end])
-    signal_window = np.stack(signal_window)
-    return mask_rms_bline, baselines, signal_window
-
-
-def charge_5x5(signal_window, mask_5x5, mask_5x5_central, charge_thr=100):
-    signal_window5x5 = signal_window[:, mask_5x5, :]
-    charge = signal_window5x5.sum(axis=2)
-    # print(f"------- DEBUG -------\ncharge.shape: {charge.shape}")
-    charge[charge < charge_thr] = 0
-    charge_sum_5x5 = charge.sum(axis=1)
-    # print(f"------- DEBUG -------\ncharge_sum_5x5.shape: {charge_sum_5x5.shape}")
-    charge_central = charge[:, mask_5x5_central].sum(axis=1)
-    return charge, charge_sum_5x5, charge_central
+  return mask_selected_events, return_dict

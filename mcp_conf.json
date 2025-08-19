@@ -1,0 +1,12 @@
+{
+  "_comment": "null active_ch_list means all channels active",
+  "active_ch_list": [1, 2, 3, 4],
+  "reco_conf": {
+    "signal_samples_pre_peak": 6,
+    "signal_samples_post_peak": 6,
+    "charge_zerosup_peak_threshold": 60,
+    "seed_charge_threshold": 0,
+    "do_5x5": false,
+    "do_timing": true
+  }
+}
