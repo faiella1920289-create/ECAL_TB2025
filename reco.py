@@ -29,11 +29,7 @@ def main(arguments):
     parser.add_argument("-d", f"--data", type=str, required=True, help="csv file with data to plot")
     parser.add_argument("-p", f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
     parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
-
     args = parser.parse_args(arguments)
-
-
-
 
     ecal_json_dict, mcp_json_dict = (retrieve_conf(filename) for filename in [args.ecal_json, args.mcp_json])
 
@@ -41,22 +37,24 @@ def main(arguments):
     file = uproot.open(args.input)
     tree = file["h4"]
 
+    # ECAL and MCP decoding
     ecal_waves = tree["xtal_sample"].array(library="np")[:, ecal_json_dict["active_ch_list"], :]
     ecal_waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(ecal_waves)
-
     mcp_waves = tree["dgtz_sample"].array(library="np")[:, mcp_json_dict["active_ch_list"], :]
     mcp_waves = 4096 - mcp_waves #must be inverted if the signal are with negative rising slope
+    print(f"reading data, json and cl arguments took {-time_start +time.time():.1f} s")
 
-    print(f"reading data, json and cl arguments took {-time_start +time.time():.1f}")
-
+    # ECAL reconstruction
     time_ecal = time.time()
     mask_ecal, reco_dict_ecal = reco_functions.generic_reco(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
     print(f"ecal reco took {-time_ecal +time.time():.1f} s")
 
+    # MCP reconstruction
     time_mcp = time.time()
     mask_mcp, reco_dict_mcp = reco_functions.generic_reco(mcp_waves, "mcp", **mcp_json_dict["reco_conf"])
     print(f"mcp reco took {-time_mcp +time.time():.1f} s")
 
+    # HODO reconstruction
     time_hodo = time.time()
     reco_dict_hodo = {}
     mask_hodo = np.ones(mask_mcp.shape[0], dtype=bool) #to be generic
@@ -66,7 +64,6 @@ def main(arguments):
         [f"hodo_{coord}_pos" for coord in coords_list],
         library="ak"
     )
-
     for coord in coords_list:
         clus = branches[f"hodo_{coord}_nclusters"]
         pos = branches[f"hodo_{coord}_pos"]
@@ -83,22 +80,18 @@ def main(arguments):
         })
     print(f"hodo reco took {-time_hodo +time.time():.1f} s")
 
-
-
+    # merging
     time_merge = time.time()
     mask_global = np.logical_and.reduce((mask_ecal, mask_mcp, mask_hodo)) #to be generic
     reco_dict = {}
     reco_dict.update(reco_dict_ecal)
     reco_dict.update(reco_dict_mcp)
     reco_dict.update(reco_dict_hodo)
-
     for key in reco_dict: reco_dict[key] = reco_dict[key][mask_global, ...]
-
     print(f"merging took {-time_merge + time.time():.1f} s")
     print(f"Total time elapsed for reco: {time.time() - time_start:.4f} s")
 
-
-
+    # plotting
     time_plot = time.time()
     plotconf_df = pd.read_csv(args.plot_list, sep=",")
     plotconf_df = plotconf_df.fillna("")
@@ -110,12 +103,10 @@ def main(arguments):
     os.system(f"mkdir {args.plot_output_folder}/prova")
     plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, f"{args.plot_output_folder}/prova"), axis=1)
 
-
-
-
     time_end = time.time()
     print(f"Time elapsed for plotting: {time_end - time_plot:.4f} s")
 
+    # writing
     time_write = time.time()
 
     branch_types = {k: (v.dtype, v.shape[1:]) for k, v in reco_dict.items()}

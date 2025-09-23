@@ -28,13 +28,16 @@
    myStyle->SetTitleFont(62, "X");
    myStyle->SetTitleFont(62, "Y");
 
-   myStyle->SetLabelSize(0.04, "X");
+   myStyle->SetLabelSize(0.035, "X");
    myStyle->SetTitleSize(0.04, "X");
 
-   myStyle->SetLabelSize(0.05, "Y");
-   myStyle->SetTitleSize(0.05, "Y");
+   myStyle->SetLabelSize(0.035, "Y");
+   myStyle->SetTitleSize(0.04, "Y");
 
-   myStyle->SetTitleOffset(1.3, "Y");
+   myStyle->SetLabelSize(0.035, "Z");
+   myStyle->SetTitleSize(0.04, "Z");
+
+   myStyle->SetTitleOffset(1., "Y");
    myStyle->SetTitleOffset(1.1, "X");
 
    // default canvas positioning
@@ -45,7 +48,7 @@
 
    myStyle->SetPadBottomMargin(0.1);
    myStyle->SetPadTopMargin(0.1);
-   myStyle->SetPadLeftMargin(0.2);
+   myStyle->SetPadLeftMargin(0.1);
    myStyle->SetPadRightMargin(0.1);
    myStyle->SetPadTickX(1);
    myStyle->SetPadTickY(1);

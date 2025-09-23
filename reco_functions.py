@@ -41,9 +41,10 @@ def split(waveforms, threshold=20, pre=5, post=10):
     baseline_waveforms = waveforms[event_idx, chan_idx, baseline_indices]    # (E, C, 10)
 
     # Step 3: Compute baseline mean
-    baseline = np.mean(baseline_waveforms, axis=2)  # shape (E, C)
+    baseline = np.mean(baseline_waveforms, axis=2)       # shape (E, C)
+    baseline_std = np.std(baseline_waveforms, axis=2)    # shape (E, C)
 
-    return argmax_idx, baseline, window_waveforms
+    return argmax_idx, baseline, baseline_std, window_waveforms
 
 
 def find_5x5(charge_mean, ieta, iphi):
@@ -75,20 +76,19 @@ def generic_reco(
   do_timing=False, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20
 ):
 
-  max_idx, baselines, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
+  max_idx, baselines, baselines_std, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
 
-  # mean of all values
-  values_mean = np.mean(waves, axis=2)
-
+  values_mean = np.mean(waves, axis=2) # mean of all values
+  values_std = np.std(waves, axis=2)   # std of all values
   waves = waves - np.repeat(baselines[:, :, np.newaxis], waves.shape[2], axis=2)  # baseline subtraction
-
-  signal_window = signal_window - np.repeat(baselines[:, :, np.newaxis], signal_window.shape[2], axis=2)
+  signal_window = signal_window - np.repeat(baselines[:, :, np.newaxis], signal_window.shape[2], axis=2) # baseline subtraction in the signal window
 
   # Build event and channel indices
   event_idx = np.arange(waves.shape[0])[:, None]        # shape (E, 1)
   chan_idx  = np.arange(waves.shape[1])[None, :]        # shape (1, C)
-  values_max = waves[event_idx, chan_idx, max_idx]  # shape (E, C)
+  values_max = waves[event_idx, chan_idx, max_idx]      # shape (E, C)
 
+  # zero suppression threshold mask
   mask_under_thr = values_max < charge_zerosup_peak_threshold
 
   charge = np.sum(signal_window, axis=2)
@@ -98,11 +98,9 @@ def generic_reco(
   tWave = np.repeat(tWave[np.newaxis, :], charge.shape[0], axis=0)
   ich = np.repeat(np.arange(0, waves.shape[1])[np.newaxis, :], charge.shape[0], axis=0)
 
-
   return_dict = {}
   mask_selected_events = np.ones((charge.shape[0],), dtype=bool)
   det = detector_name
-
 
   if do_5x5:
     charge_mean = np.mean(charge, axis=0)
@@ -152,9 +150,9 @@ def generic_reco(
 
   return_dict.update({
     f"{det}_peak_pos": max_idx, f"{det}_ich": ich,
-    f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_charge": charge,
-    f"{det}_wave": waves, f"{det}_t_wave": tWave
+    f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_samples_std": values_std,
+    f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std,
+    f"{det}_charge": charge, f"{det}_wave": waves, f"{det}_t_wave": tWave
   })
-
 
   return mask_selected_events, return_dict
