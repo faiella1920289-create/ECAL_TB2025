@@ -26,7 +26,7 @@ def main(arguments):
     parser.add_argument("-ej", f"--ecal-json", type=str, required=False, help="ecal reco configuration", default="ecal_conf.json")
     parser.add_argument("-mj", f"--mcp-json", type=str, required=False, help="mcp reco configuration", default="mcp_conf.json")
     parser.add_argument("-ct", f"--compression-type", type=str, required=False, help="mcp reco configuration", default="lz4")
-    parser.add_argument("-d", f"--data", type=str, required=True, help="csv file with data to plot")
+    parser.add_argument("-d", f"--data", type=str, required=True, help="file with data to plot")
     parser.add_argument("-p", f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
     parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
     args = parser.parse_args(arguments)
@@ -46,12 +46,12 @@ def main(arguments):
 
     # ECAL reconstruction
     time_ecal = time.time()
-    mask_ecal, reco_dict_ecal = reco_functions.generic_reco(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
+    mask_ecal, reco_dict_ecal = reco_functions.generic_reco_parallel(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
     print(f"ecal reco took {-time_ecal +time.time():.1f} s")
 
     # MCP reconstruction
     time_mcp = time.time()
-    mask_mcp, reco_dict_mcp = reco_functions.generic_reco(mcp_waves, "mcp", **mcp_json_dict["reco_conf"])
+    mask_mcp, reco_dict_mcp = reco_functions.generic_reco_parallel(mcp_waves, "mcp", **mcp_json_dict["reco_conf"])
     print(f"mcp reco took {-time_mcp +time.time():.1f} s")
 
     # HODO reconstruction

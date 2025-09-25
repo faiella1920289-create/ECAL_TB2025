@@ -1,6 +1,7 @@
 import numpy as np
 import eta_phi_ch_map
 from scipy import ndimage
+from multiprocessing import Pool
 
 def decode_ecal_waves(waves):
     bit13_mask = 1 << 13 #validity bit
@@ -12,6 +13,7 @@ def decode_ecal_waves(waves):
     amplitudes[gain_is_1] *= 10
     #amplitudes[~is_valid] = 0
     return amplitudes, is_valid, gain_is_1
+
 
 def split(waveforms, threshold=20, pre=5, post=10):
 
@@ -57,7 +59,7 @@ def find_5x5(charge_mean, ieta, iphi):
       ieta_seed, iphi_seed = ieta[seed_ch], iphi[seed_ch]
       mask_5x5 = np.logical_and(np.abs(ieta - ieta_seed) < 3, np.abs(iphi - iphi_seed) < 3)
       mask_5x5[seed_ch] = False
-      seed_5x5_ratio = np.sum(charge_mean[mask_5x5]) * 24/np.sum(mask_5x5) / charge_mean[seed_ch]
+      seed_5x5_ratio = np.sum(charge_mean[mask_5x5]) * 24 / np.sum(mask_5x5) / charge_mean[seed_ch]
       if seed_5x5_ratio < 0.2:
         fake_mask[seed_ch] = False
         continue
@@ -65,7 +67,6 @@ def find_5x5(charge_mean, ieta, iphi):
         mask_5x5[seed_ch] = True
         break
     return mask_5x5, seed_ch
-
 
 
 def generic_reco(
@@ -156,3 +157,33 @@ def generic_reco(
   })
 
   return mask_selected_events, return_dict
+
+
+def generic_reco_chunk(args):
+    """
+    Wrapper to handle chunking for multiprocessing.
+    """
+    waves_chunk, detector_name, chid_dict, x_y_z_tuple, kwargs = args
+    return generic_reco(
+        waves_chunk, detector_name, chid_dict, x_y_z_tuple, **kwargs
+    )
+
+
+def generic_reco_parallel(waves, detector_name, chid_dict, x_y_z_tuple, n_cpus=4, **kwargs):
+    E = waves.shape[0]
+    chunk_size = (E + n_cpus - 1) // n_cpus  # ceil division
+    chunks = [(waves[i*chunk_size:(i+1)*chunk_size], detector_name, chid_dict, x_y_z_tuple, kwargs)
+              for i in range(n_cpus)]
+
+    with Pool(n_cpus) as pool:
+        results = pool.map(generic_reco_chunk, chunks)
+
+    # Combine results
+    masks_list, dicts_list = zip(*results)
+    combined_mask = np.concatenate(masks_list, axis=0)
+
+    combined_dict = {}
+    for key in dicts_list[0].keys():
+        combined_dict[key] = np.concatenate([d[key] for d in dicts_list], axis=0)
+
+    return combined_mask, combined_dict

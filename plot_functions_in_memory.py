@@ -128,7 +128,6 @@ def plot(row, uproot_dict, outputfolder):
         h.GetYaxis().SetNdivisions(120)
         c.SetGrid()
         c.SetLogz(int(row.logz))
-        print(int(row.logz))
         c.SetRightMargin(0.15)
 
     else:
