@@ -20,16 +20,17 @@ def main(arguments):
 
     # input parameters
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument("-i", f"--input", type=str, required=True, help="input ROOT file with unpacked tree")
-    parser.add_argument("-r", f"--run", type=str, required=True, help="run number")
-    parser.add_argument("-s", f"--spill", type=str, required=True, help="spill number")
+    parser.add_argument("-i",  f"--input", type=str, required=True, help="input ROOT file with unpacked tree")
+    parser.add_argument("-r",  f"--run", type=str, required=True, help="run number")
+    parser.add_argument("-s",  f"--spill", type=str, required=True, help="spill number")
     parser.add_argument("-ro", f"--reco-output-dir", type=str, required=True, help="directory for reco output")
     parser.add_argument("-ej", f"--ecal-json", type=str, required=False, help="ecal reco configuration", default="ecal_conf.json")
     parser.add_argument("-mj", f"--mcp-json", type=str, required=False, help="mcp reco configuration", default="mcp_conf.json")
     parser.add_argument("-ct", f"--compression-type", type=str, required=False, help="mcp reco configuration", default="lz4")
-    parser.add_argument("-d", f"--data", type=str, required=True, help="file with data to plot")
-    parser.add_argument("-p", f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
+    parser.add_argument("-d",  f"--data", type=str, required=True, help="file with data to plot")
+    parser.add_argument("-p",  f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
     parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
+    parser.add_argument("-hd", f"--hadd-cmd", type=str, required=False, default="", help="command to hadd")
     args = parser.parse_args(arguments)
 
     ecal_json_dict, mcp_json_dict = (retrieve_conf(filename) for filename in [args.ecal_json, args.mcp_json])
@@ -104,11 +105,13 @@ def main(arguments):
 
     ROOT.gROOT.LoadMacro("root_logon.C")
 
-    os.system(f"mkdir {args.plot_output_folder}/prova")
-    plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, f"{args.plot_output_folder}/prova"), axis=1)
+    os.system(f"mkdir {args.plot_output_folder}")
+    plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, args.plot_output_folder), axis=1)
 
     time_end = time.time()
     print(f"Time elapsed for plotting: {time_end - time_plot:.4f} s")
+
+    os.system(args.hadd_cmd) #goes in parallel
 
     # writing
     time_write = time.time()

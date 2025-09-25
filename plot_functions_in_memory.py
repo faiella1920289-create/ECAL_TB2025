@@ -1,19 +1,34 @@
 import time, re, os, ROOT
 import numpy as np
-import matplotlib.pyplot as plt
+import traceback
+import shutil
 
+def replace_index_axis1(match):
+    var = match.group(1)
+    idx = match.group(2)
+    return f"uproot_dict['{var}'][:,{idx}]"
+
+def replace_index_noch(match):
+    var = match.group(1)
+    return f"uproot_dict['{var}']"
 
 def eval_formula(formula, data_dict):
+    if "(" in formula and "[" not in formula:
+      pattern = re.compile(r"(\w+)")
+      numpy_expr = pattern.sub(replace_index_noch, formula)
+      print(numpy_expr)
+      result = eval(numpy_expr, {"uproot_dict": data_dict, "np": np})
+
+      return result
+
+
     if "[" not in formula: return data_dict[formula]
 
-    def replace_index(match):
-        var = match.group(1)
-        idx = match.group(2)
-        return f"uproot_dict['{var}'][:,{idx}]"
+    #if "[" not in formula: eval(formula, {"uproot_dict": data_dict, "np": np})
 
     pattern = re.compile(r"(\w+)\[(\d+)\]")
-    numpy_expr = pattern.sub(replace_index, formula)
-
+    numpy_expr = pattern.sub(replace_index_axis1, formula)
+    print(numpy_expr)
     result = eval(numpy_expr, {"uproot_dict": data_dict, "np": np})
 
     return result
@@ -36,31 +51,57 @@ def convert_root_cut_to_numpy_expr(cut_str, available_vars):
     return expr
 
 
-def plot(row, uproot_dict, outputfolder):
+def plot(row, uproot_dict, outputfolder, just_draw=False):
+
+  ROOT.gErrorIgnoreLevel = ROOT.kError
+
+  try:
     name = row['name']
-    f = ROOT.TFile(f"{outputfolder}/{name}.root", "recreate")
+
+    print(name)
+
+    os.makedirs(f"{outputfolder}/{row.folder}/", exist_ok=True)
+
+    f = ROOT.TFile(f"{outputfolder}/{row.folder}/{name}.root", ("update" if just_draw else "recreate"))
     f.cd()
+
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
+
+    if just_draw:
+      for key in f.GetListOfKeys():
+        obj = key.ReadObj()
+        try:
+          if obj.InheritsFrom("TCanvas"):
+            f.Delete(f"{key.GetName()};{key.GetCycle()}")
+        except TypeError:
+          pass
 
     c = ROOT.TCanvas(f"{name}_canvas")
     c.cd()
 
-    # Handle ROOT-style cuts
-    if str(row.cuts).strip() == "":
+    if just_draw:
+      pass
+    else:
+      if str(row.cuts).strip() == "":
         first_key = next(iter(uproot_dict.keys()))
         mask = np.ones((uproot_dict[first_key].shape[0],), dtype=bool)
-    else:
+      else:
         expr = convert_root_cut_to_numpy_expr(str(row.cuts), uproot_dict.keys())
+        print(expr)
         mask = eval(expr)
 
-    x = eval_formula(row.x, uproot_dict)[mask]
-    nevents = x.shape[0]
-    x = x.ravel()
+      x = eval_formula(row.x, uproot_dict)[mask]
+      nevents = x.shape[0]
+      x = x.ravel()
 
     if str(row.y).strip() == "0" and str(row.z).strip() == "0":
-        print("------- DEBUG -------\nTH1F")
-        h = ROOT.TH1F(name, row.title, int(row.binsnx), float(row.binsminx), float(row.binsmaxx))
-        h.FillN(len(x), x.astype(np.float64), np.ones_like(x, dtype=np.float64))
+        if just_draw:
+          h = f.Get(f"{name}")
+        else:
+          h = ROOT.TH1F(name, row.title, int(row.binsnx), float(row.binsminx), float(row.binsmaxx))
+
+          h.FillN(len(x), x.astype(np.float64), np.ones_like(x, dtype=np.float64))
+
         h.Draw("HIST")
         h.SetFillColorAlpha(ROOT.kBlue, 0.2)
         h.SetLineColor(eval(f"ROOT.{row.color}"))
@@ -69,6 +110,8 @@ def plot(row, uproot_dict, outputfolder):
         h.GetXaxis().SetRangeUser(h.GetMean() - 3*h.GetRMS(), h.GetMean() + 3*h.GetRMS())
         h.GetXaxis().SetRangeUser(h.GetMean() - 5*h.GetRMS(), h.GetMean() + 5*h.GetRMS())
         h.GetYaxis().SetTitle(f"entries / {float(f'{binw:.1g}'):g} {row.ylabel}")
+        c.SetLogy(int(row.logy))
+
         c.Update()
         max_bin = h.GetMaximumBin()
         max_position = h.GetBinCenter(max_bin)
@@ -91,35 +134,49 @@ def plot(row, uproot_dict, outputfolder):
 
         pave.Draw()
 
+
     elif str(row.y).strip() != "0" and str(row.z).strip() == "0":
-        print("------- DEBUG -------\nTH2F")
-        y = eval_formula(row.y, uproot_dict)[mask].ravel()
-
-        print(name, row.title, int(row.binsnx), float(row.binsminx), float(row.binsmaxx), 
-              int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-
-        h = ROOT.TH2F(name, row.title,
+        if just_draw:
+          h = f.Get(f"{name}")
+        else:
+          y = eval_formula(row.y, uproot_dict)[mask].ravel()
+          h = ROOT.TH2F(name, row.title,
                       int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                       int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-        h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
+          print(x.shape, y.shape)
+          h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
+
         h.Draw("ZCOL")
         h.GetYaxis().SetTitle(row.ylabel)
 
-    elif (str(row.y).strip() != "0" and str(row.z).strip() != "0") and str(row.cluster).strip() == "0":
-        print("------- DEBUG -------\nTH2D")
-        y = eval_formula(row.y, uproot_dict)[mask].ravel()
-        z = eval_formula(row.z, uproot_dict)[mask].ravel()
+        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1)) #iterative...
+        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1))
+        h.GetXaxis().SetRangeUser(h.GetMean(1) - 5*h.GetRMS(1), h.GetMean(1) + 5*h.GetRMS(1))
+        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2)) #iterative...
+        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2))
+        h.GetYaxis().SetRangeUser(h.GetMean(2) - 5*h.GetRMS(2), h.GetMean(2) + 5*h.GetRMS(2))
 
-        h = ROOT.TH2D(name, row.title,
+    else:
+        ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
+
+        if just_draw:
+          h = f.Get(f"{name}")
+        else:
+          y = eval_formula(row.y, uproot_dict)[mask].ravel()
+          z = eval_formula(row.z, uproot_dict)[mask].ravel()
+
+          h = ROOT.TH2D(name, row.title,
                             int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                             int(row.binsny), float(row.binsminy), float(row.binsmaxy))
 
-        ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
-        h.FillN(len(x),
+
+          h.FillN(len(x),
                 x.astype(np.float64),
                 y.astype(np.float64),
                 z.astype(np.float64))
-        h.Scale(1/nevents)
+
+          h.Scale(1/nevents)
+
         h.Draw("ZCOL")
         h.SetContour(int(row.contours))
         h.GetZaxis().SetTitle(row.zlabel)
@@ -127,42 +184,33 @@ def plot(row, uproot_dict, outputfolder):
         h.GetXaxis().SetNdivisions(120)
         h.GetYaxis().SetNdivisions(120)
         c.SetGrid()
-        c.SetLogz(int(row.logz))
         c.SetRightMargin(0.15)
+        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1)) #iterative...
+        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1))
+        h.GetXaxis().SetRangeUser(h.GetMean(1) - 5*h.GetRMS(1), h.GetMean(1) + 5*h.GetRMS(1))
+        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2)) #iterative...
+        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2))
+        h.GetYaxis().SetRangeUser(h.GetMean(2) - 5*h.GetRMS(2), h.GetMean(2) + 5*h.GetRMS(2))
 
-    else:
-        print("------- DEBUG -------\nTH2D 5x5")
-        y = eval_formula(row.y, uproot_dict)[mask].ravel()
-        z = eval_formula(row.z, uproot_dict)[mask].ravel()
-
-        h = ROOT.TH2D(name, row.title,
-                            int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
-                            int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-
-
-        ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
-        h.FillN(len(x),
-                x.astype(np.float64),
-                y.astype(np.float64),
-                z.astype(np.float64))
-        h.Scale(1/nevents)
-        h.Draw("ZCOL")
-        h.SetContour(int(row.contours))
-        h.GetZaxis().SetTitle(row.zlabel)
-        h.GetYaxis().SetTitle(row.ylabel)
-        h.GetXaxis().SetNdivisions(-5)
-        h.GetYaxis().SetNdivisions(-5)
-        c.SetGrid()
-        c.SetLogz(int(row.logz))
-        c.SetRightMargin(0.15)
 
     h.GetXaxis().SetTitle(row.xlabel)
-    c.SaveAs(f"{outputfolder}/{name}.pdf")
-    c.SaveAs(f"{outputfolder}/{name}.png")
-    c.SaveAs(f"{outputfolder}/{name}.root")
-    c.Write()
-    h.Write()
+
+    if not os.path.exists(f"{outputfolder}/{row.folder}/index.php"):
+      shutil.copy2(f"{outputfolder}/index.php", f"{outputfolder}/{row.folder}/index.php")
+    if not os.path.exists(f"{outputfolder}/{row.folder}/jsroot_viewer.php"):
+      shutil.copy2(f"{outputfolder}/jsroot_viewer.php", f"{outputfolder}/{row.folder}/jsroot_viewer.php")
+
+    #c.SaveAs(f"{outputfolder}/{row.folder}/{name}.pdf")
+    c.SaveAs(f"{outputfolder}/{row.folder}/{name}.png")
+    if just_draw: c.Write("", ROOT.TObject.kOverwrite)
+    else:
+      c.Write()
+      h.Write()
     f.Close()
     c.Close()
     del c
     del h
+
+  except Exception:
+    print(traceback.format_exc())
+
