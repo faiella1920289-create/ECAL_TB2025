@@ -46,12 +46,12 @@ def main(arguments):
 
     # ECAL reconstruction
     time_ecal = time.time()
-    mask_ecal, reco_dict_ecal = reco_functions.generic_reco_parallel(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
+    mask_ecal, reco_dict_ecal = reco_functions.generic_reco(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
     print(f"ecal reco took {-time_ecal +time.time():.1f} s")
 
     # MCP reconstruction
     time_mcp = time.time()
-    mask_mcp, reco_dict_mcp = reco_functions.generic_reco_parallel(mcp_waves, "mcp", **mcp_json_dict["reco_conf"])
+    mask_mcp, reco_dict_mcp = reco_functions.generic_reco(mcp_waves, "mcp", **mcp_json_dict["reco_conf"])
     print(f"mcp reco took {-time_mcp +time.time():.1f} s")
 
     # HODO reconstruction

@@ -163,16 +163,16 @@ def generic_reco_chunk(args):
     """
     Wrapper to handle chunking for multiprocessing.
     """
-    waves_chunk, detector_name, chid_dict, x_y_z_tuple, kwargs = args
+    waves_chunk, detector_name, kwargs = args
     return generic_reco(
-        waves_chunk, detector_name, chid_dict, x_y_z_tuple, **kwargs
+        waves_chunk, detector_name, **kwargs
     )
 
 
-def generic_reco_parallel(waves, detector_name, chid_dict, x_y_z_tuple, n_cpus=4, **kwargs):
+def generic_reco_parallel(waves, detector_name, n_cpus=1, **kwargs):
     E = waves.shape[0]
     chunk_size = (E + n_cpus - 1) // n_cpus  # ceil division
-    chunks = [(waves[i*chunk_size:(i+1)*chunk_size], detector_name, chid_dict, x_y_z_tuple, kwargs)
+    chunks = [(waves[i*chunk_size:(i+1)*chunk_size], detector_name, kwargs)
               for i in range(n_cpus)]
 
     with Pool(n_cpus) as pool:
