@@ -58,6 +58,7 @@ def plot(row, uproot_dict, outputfolder):
     x = x.ravel()
 
     if str(row.y).strip() == "0" and str(row.z).strip() == "0":
+        print("------- DEBUG -------\nTH1F")
         h = ROOT.TH1F(name, row.title, int(row.binsnx), float(row.binsminx), float(row.binsmaxx))
         h.FillN(len(x), x.astype(np.float64), np.ones_like(x, dtype=np.float64))
         h.Draw("HIST")
@@ -91,12 +92,11 @@ def plot(row, uproot_dict, outputfolder):
         pave.Draw()
 
     elif str(row.y).strip() != "0" and str(row.z).strip() == "0":
+        print("------- DEBUG -------\nTH2F")
         y = eval_formula(row.y, uproot_dict)[mask].ravel()
 
-        print(name, row.title,
-                      int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
-                      int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-
+        print(name, row.title, int(row.binsnx), float(row.binsminx), float(row.binsmaxx), 
+              int(row.binsny), float(row.binsminy), float(row.binsmaxy))
 
         h = ROOT.TH2F(name, row.title,
                       int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
@@ -105,7 +105,33 @@ def plot(row, uproot_dict, outputfolder):
         h.Draw("ZCOL")
         h.GetYaxis().SetTitle(row.ylabel)
 
+    elif (str(row.y).strip() != "0" and str(row.z).strip() != "0") and str(row.cluster).strip() == "0":
+        print("------- DEBUG -------\nTH2D")
+        y = eval_formula(row.y, uproot_dict)[mask].ravel()
+        z = eval_formula(row.z, uproot_dict)[mask].ravel()
+
+        h = ROOT.TH2D(name, row.title,
+                            int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
+                            int(row.binsny), float(row.binsminy), float(row.binsmaxy))
+
+        ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
+        h.FillN(len(x),
+                x.astype(np.float64),
+                y.astype(np.float64),
+                z.astype(np.float64))
+        h.Scale(1/nevents)
+        h.Draw("ZCOL")
+        h.SetContour(int(row.contours))
+        h.GetZaxis().SetTitle(row.zlabel)
+        h.GetYaxis().SetTitle(row.ylabel)
+        h.GetXaxis().SetNdivisions(120)
+        h.GetYaxis().SetNdivisions(120)
+        c.SetGrid()
+        c.SetLogz(int(row.logz))
+        c.SetRightMargin(0.15)
+
     else:
+        print("------- DEBUG -------\nTH2D 5x5")
         y = eval_formula(row.y, uproot_dict)[mask].ravel()
         z = eval_formula(row.z, uproot_dict)[mask].ravel()
 
@@ -124,8 +150,8 @@ def plot(row, uproot_dict, outputfolder):
         h.SetContour(int(row.contours))
         h.GetZaxis().SetTitle(row.zlabel)
         h.GetYaxis().SetTitle(row.ylabel)
-        h.GetXaxis().SetNdivisions(120)
-        h.GetYaxis().SetNdivisions(120)
+        h.GetXaxis().SetNdivisions(-5)
+        h.GetYaxis().SetNdivisions(-5)
         c.SetGrid()
         c.SetLogz(int(row.logz))
         c.SetRightMargin(0.15)
@@ -140,5 +166,3 @@ def plot(row, uproot_dict, outputfolder):
     c.Close()
     del c
     del h
-
-

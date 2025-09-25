@@ -1,21 +1,27 @@
-# File temporanei degli editor
+# temporary files
 *~
 *.swp
 *.swo
 
-# File di Python
+# python files
 __pycache__/
 *.py[cod]
 
-# Ambienti virtuali
+# virtual env
 venv/
 .env/
 
-# File di log
+# log files
 *.log
 
-# File di sistema
+#system files
 .DS_Store
 
-# file di VS code
+# vs code files
 .vscode/
+
+# plots
+plots/
+
+# reco
+reco/
