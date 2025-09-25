@@ -166,12 +166,3 @@ def plot(row, uproot_dict, outputfolder):
     c.Close()
     del c
     del h
-
-    
-def plot_chunk(args):
-    """
-    Wrapper to handle chunking for multiprocessing.
-    """
-    print("\n------- DEBUG plot_chunk-------")
-    plotconf_df, reco_dict, folder = args
-    return plotconf_df.apply(lambda row: plot(row, reco_dict, f"{folder}/prova"), axis=1)

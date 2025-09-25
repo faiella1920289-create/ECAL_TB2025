@@ -99,16 +99,13 @@ def main(arguments):
     n_cpus = 8
     plotconf_df = pd.read_csv(args.plot_list, sep=",")
     plotconf_df = plotconf_df.fillna("")
-    plotconf_df_chunks = np.array_split(plotconf_df, n_cpus)
-    chunks = [(plotconf_df_chunks[i], reco_dict, args.plot_output_folder) for i in range(n_cpus)]
 
     # os.system(f"cp index.php {outputfolder}")
 
     ROOT.gROOT.LoadMacro("root_logon.C")
 
     os.system(f"mkdir {args.plot_output_folder}/prova")
-    with Pool(n_cpus) as pool:
-        results = pool.map(plot_functions.plot_chunk, chunks)
+    plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, f"{args.plot_output_folder}/prova"), axis=1)
 
     time_end = time.time()
     print(f"Time elapsed for plotting: {time_end - time_plot:.4f} s")
