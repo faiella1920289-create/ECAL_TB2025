@@ -22,3 +22,9 @@ venv/
 
 # plots
 plots/
+
+# raw
+raw/
+
+#reco
+reco/

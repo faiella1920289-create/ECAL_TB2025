@@ -157,33 +157,3 @@ def generic_reco(
   })
 
   return mask_selected_events, return_dict
-
-
-def generic_reco_chunk(args):
-    """
-    Wrapper to handle chunking for multiprocessing.
-    """
-    waves_chunk, detector_name, kwargs = args
-    return generic_reco(
-        waves_chunk, detector_name, **kwargs
-    )
-
-
-def generic_reco_parallel(waves, detector_name, n_cpus=1, **kwargs):
-    E = waves.shape[0]
-    chunk_size = (E + n_cpus - 1) // n_cpus  # ceil division
-    chunks = [(waves[i*chunk_size:(i+1)*chunk_size], detector_name, kwargs)
-              for i in range(n_cpus)]
-
-    with Pool(n_cpus) as pool:
-        results = pool.map(generic_reco_chunk, chunks)
-
-    # Combine results
-    masks_list, dicts_list = zip(*results)
-    combined_mask = np.concatenate(masks_list, axis=0)
-
-    combined_dict = {}
-    for key in dicts_list[0].keys():
-        combined_dict[key] = np.concatenate([d[key] for d in dicts_list], axis=0)
-
-    return combined_mask, combined_dict

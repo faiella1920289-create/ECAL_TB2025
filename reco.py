@@ -4,6 +4,7 @@ import numpy as np
 import reco_functions
 import pandas as pd
 import plot_functions_in_memory as plot_functions
+from multiprocessing import Pool
 
 
 def retrieve_conf(filename):
@@ -32,7 +33,9 @@ def main(arguments):
     args = parser.parse_args(arguments)
 
     ecal_json_dict, mcp_json_dict = (retrieve_conf(filename) for filename in [args.ecal_json, args.mcp_json])
-
+    print(f"args + conf {-time_start +time.time():.1f} s")
+    time_start_read = time.time()
+    
     # open input file
     file = uproot.open(args.input)
     tree = file["h4"]
@@ -42,7 +45,7 @@ def main(arguments):
     ecal_waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(ecal_waves)
     mcp_waves = tree["dgtz_sample"].array(library="np")[:, mcp_json_dict["active_ch_list"], :]
     mcp_waves = 4096 - mcp_waves #must be inverted if the signal are with negative rising slope
-    print(f"reading data, json and cl arguments took {-time_start +time.time():.1f} s")
+    print(f"reading waves took {-time_start_read +time.time():.1f} s")
 
     # ECAL reconstruction
     time_ecal = time.time()
@@ -93,15 +96,19 @@ def main(arguments):
 
     # plotting
     time_plot = time.time()
+    n_cpus = 8
     plotconf_df = pd.read_csv(args.plot_list, sep=",")
     plotconf_df = plotconf_df.fillna("")
+    plotconf_df_chunks = np.array_split(plotconf_df, n_cpus)
+    chunks = [(plotconf_df_chunks[i], reco_dict, args.plot_output_folder) for i in range(n_cpus)]
 
     # os.system(f"cp index.php {outputfolder}")
 
     ROOT.gROOT.LoadMacro("root_logon.C")
 
     os.system(f"mkdir {args.plot_output_folder}/prova")
-    plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, f"{args.plot_output_folder}/prova"), axis=1)
+    with Pool(n_cpus) as pool:
+        results = pool.map(plot_functions.plot_chunk, chunks)
 
     time_end = time.time()
     print(f"Time elapsed for plotting: {time_end - time_plot:.4f} s")
