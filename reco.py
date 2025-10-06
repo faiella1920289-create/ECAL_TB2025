@@ -27,7 +27,6 @@ def main(arguments):
     parser.add_argument("-ej", f"--ecal-json", type=str, required=False, help="ecal reco configuration", default="ecal_conf.json")
     parser.add_argument("-mj", f"--mcp-json", type=str, required=False, help="mcp reco configuration", default="mcp_conf.json")
     parser.add_argument("-ct", f"--compression-type", type=str, required=False, help="mcp reco configuration", default="lz4")
-    parser.add_argument("-d",  f"--data", type=str, required=True, help="file with data to plot")
     parser.add_argument("-p",  f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
     parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
     parser.add_argument("-hd", f"--hadd-cmd", type=str, required=False, default="", help="command to hadd")
@@ -51,6 +50,7 @@ def main(arguments):
     # ECAL reconstruction
     time_ecal = time.time()
     mask_ecal, reco_dict_ecal = reco_functions.generic_reco(ecal_waves, "ecal", **ecal_json_dict["reco_conf"])
+    print(reco_dict_ecal.keys())
     print(f"ecal reco took {-time_ecal +time.time():.1f} s")
 
     # MCP reconstruction
@@ -101,11 +101,19 @@ def main(arguments):
     plotconf_df = pd.read_csv(args.plot_list, sep=",")
     plotconf_df = plotconf_df.fillna("")
 
-    # os.system(f"cp index.php {outputfolder}")
-
     ROOT.gROOT.LoadMacro("root_logon.C")
 
-    os.system(f"mkdir {args.plot_output_folder}")
+    os.system(f"mkdir -p {args.plot_output_folder}")
+
+    if not os.path.exists(f"{args.plot_output_folder}/index.php"):
+        os.system(f"cp {args.plot_output_folder}/../../index.php {args.plot_output_folder}/index.php")
+    if not os.path.exists(f"{args.plot_output_folder}/jsroot_viewer.php"):
+        os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/jsroot_viewer.php")
+    if not os.path.exists(f"{args.plot_output_folder}/../index.php"):
+        os.system(f"cp {args.plot_output_folder}/../../index.php {args.plot_output_folder}/../index.php")
+    if not os.path.exists(f"{args.plot_output_folder}/../jsroot_viewer.php"):
+        os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/../jsroot_viewer.php")
+
     plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, args.plot_output_folder), axis=1)
 
     time_end = time.time()

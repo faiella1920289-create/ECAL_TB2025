@@ -16,7 +16,6 @@ def eval_formula(formula, data_dict):
     if "(" in formula and "[" not in formula:
       pattern = re.compile(r"(\w+)")
       numpy_expr = pattern.sub(replace_index_noch, formula)
-      print(numpy_expr)
       result = eval(numpy_expr, {"uproot_dict": data_dict, "np": np})
 
       return result
@@ -28,7 +27,6 @@ def eval_formula(formula, data_dict):
 
     pattern = re.compile(r"(\w+)\[(\d+)\]")
     numpy_expr = pattern.sub(replace_index_axis1, formula)
-    print(numpy_expr)
     result = eval(numpy_expr, {"uproot_dict": data_dict, "np": np})
 
     return result
@@ -54,6 +52,8 @@ def convert_root_cut_to_numpy_expr(cut_str, available_vars):
 def plot(row, uproot_dict, outputfolder, just_draw=False):
 
   ROOT.gErrorIgnoreLevel = ROOT.kError
+
+  print(f"outputfolder: {outputfolder}")
 
   try:
     name = row['name']
@@ -87,7 +87,6 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         mask = np.ones((uproot_dict[first_key].shape[0],), dtype=bool)
       else:
         expr = convert_root_cut_to_numpy_expr(str(row.cuts), uproot_dict.keys())
-        print(expr)
         mask = eval(expr)
 
       x = eval_formula(row.x, uproot_dict)[mask]
@@ -110,7 +109,8 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         h.GetXaxis().SetRangeUser(h.GetMean() - 3*h.GetRMS(), h.GetMean() + 3*h.GetRMS())
         h.GetXaxis().SetRangeUser(h.GetMean() - 5*h.GetRMS(), h.GetMean() + 5*h.GetRMS())
         h.GetYaxis().SetTitle(f"entries / {float(f'{binw:.1g}'):g} {row.ylabel}")
-        c.SetLogy(int(row.logy))
+        if row.logz != "":
+          c.SetLogz(int(row.logz))
 
         c.Update()
         max_bin = h.GetMaximumBin()
@@ -143,18 +143,10 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
           h = ROOT.TH2F(name, row.title,
                       int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                       int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-          print(x.shape, y.shape)
           h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
 
         h.Draw("ZCOL")
         h.GetYaxis().SetTitle(row.ylabel)
-
-        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1)) #iterative...
-        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1))
-        h.GetXaxis().SetRangeUser(h.GetMean(1) - 5*h.GetRMS(1), h.GetMean(1) + 5*h.GetRMS(1))
-        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2)) #iterative...
-        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2))
-        h.GetYaxis().SetRangeUser(h.GetMean(2) - 5*h.GetRMS(2), h.GetMean(2) + 5*h.GetRMS(2))
 
     else:
         ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
@@ -185,13 +177,6 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         h.GetYaxis().SetNdivisions(120)
         c.SetGrid()
         c.SetRightMargin(0.15)
-        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1)) #iterative...
-        h.GetXaxis().SetRangeUser(h.GetMean(1) - 3*h.GetRMS(1), h.GetMean(1) + 3*h.GetRMS(1))
-        h.GetXaxis().SetRangeUser(h.GetMean(1) - 5*h.GetRMS(1), h.GetMean(1) + 5*h.GetRMS(1))
-        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2)) #iterative...
-        h.GetYaxis().SetRangeUser(h.GetMean(2) - 3*h.GetRMS(2), h.GetMean(2) + 3*h.GetRMS(2))
-        h.GetYaxis().SetRangeUser(h.GetMean(2) - 5*h.GetRMS(2), h.GetMean(2) + 5*h.GetRMS(2))
-
 
     h.GetXaxis().SetTitle(row.xlabel)
 

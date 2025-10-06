@@ -45,8 +45,9 @@ def split(waveforms, threshold=20, pre=5, post=10):
     # Step 3: Compute baseline mean
     baseline = np.mean(baseline_waveforms, axis=2)       # shape (E, C)
     baseline_std = np.std(baseline_waveforms, axis=2)    # shape (E, C)
+    baseline_integral = np.sum(baseline_waveforms, axis=2)  # shape (E, C)
 
-    return argmax_idx, baseline, baseline_std, window_waveforms
+    return argmax_idx, baseline, baseline_std, baseline_integral, window_waveforms
 
 
 def find_5x5(charge_mean, ieta, iphi):
@@ -77,7 +78,8 @@ def generic_reco(
   do_timing=False, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20
 ):
 
-  max_idx, baselines, baselines_std, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
+  max_idx, baselines, baselines_std, baseline_integral, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
+  print(baseline_integral.shape)
 
   values_mean = np.mean(waves, axis=2) # mean of all values
   values_std = np.std(waves, axis=2)   # std of all values
@@ -152,7 +154,7 @@ def generic_reco(
   return_dict.update({
     f"{det}_peak_pos": max_idx, f"{det}_ich": ich,
     f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_samples_std": values_std,
-    f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std,
+    f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std, f"{det}_baseline_integral": baseline_integral,
     f"{det}_charge": charge, f"{det}_wave": waves, f"{det}_t_wave": tWave
   })
 
