@@ -1,0 +1,82 @@
+{
+    "global": {
+        "map_filename": "maps/tb_all.csv",
+        "spill_type": {
+            "beam": {
+                "plot_list": "plotlists/plot_list.csv",
+                "tree_name": "h4",
+                "detector_list": ["ecal", "mcp", "hodo"],
+                "option": null
+            },
+            "laser": {
+                "plot_list": "plotlists/plot_list_laser.csv",
+                "tree_name": "h4_laser",
+                "detector_list": ["ecal"],
+                "option": {
+                    "ecal": {
+                        "reco_conf": {
+                            "do_5x5": false,
+                            "save_some_waves": false
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    "detectors": {
+        "ecal": {
+            "_comment": "null active_ch_list means all channels active",
+            "active_ch_list": null,
+            "decode": true,
+            "to_be_inverted": false,
+            "waves_branch": "xtal_sample",
+            "generic_reco": true,
+            "reco_conf": {
+                "signal_samples_pre_peak": 5,
+                "signal_samples_post_peak": 10,
+                "charge_zerosup_peak_threshold": 10,
+                "seed_charge_threshold": 50,
+                "do_5x5": true,
+                "do_timing": false,
+                "save_some_waves": true
+            }
+        },
+
+        "mcp": {
+            "_comment": "null active_ch_list means all channels active",
+            "active_ch_list": [1, 2, 3, 4],
+            "decode": false,
+            "to_be_inverted": true,
+            "waves_branch": "dgtz_sample",
+            "generic_reco": true,
+            "reco_conf": {
+                "signal_samples_pre_peak": 6,
+                "signal_samples_post_peak": 6,
+                "charge_zerosup_peak_threshold": 60,
+                "seed_charge_threshold": 0,
+                "do_5x5": false,
+                "do_timing": true,
+                "save_some_waves": true
+            }
+        },
+
+        "hodo": {
+            "_comment": "null active_ch_list means all channels active",
+            "active_ch_list": null,
+            "decode": false,
+            "to_be_inverted": false,
+            "waves_branch": null,
+            "generic_reco": false,
+            "reco_conf": {
+                "signal_samples_pre_peak": 0,
+                "signal_samples_post_peak": 0,
+                "charge_zerosup_peak_threshold": 0,
+                "seed_charge_threshold": 0,
+                "do_5x5": false,
+                "do_timing": false,
+                "save_some_waves": true
+            }
+        }
+    }
+}

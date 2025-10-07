@@ -1,4 +1,5 @@
 import numpy as np
+import awkward as ak
 import eta_phi_ch_map
 from scipy import ndimage
 from multiprocessing import Pool
@@ -71,11 +72,11 @@ def find_5x5(charge_mean, ieta, iphi):
 
 
 def generic_reco(
-  waves, detector_name,
+  waves, detector_name, opt,
   signal_samples_pre_peak=5, signal_samples_post_peak=10,
   charge_zerosup_peak_threshold=10, seed_charge_threshold=50,
   do_5x5=True,
-  do_timing=False, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20
+  do_timing=False, save_some_waves=True, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20
 ):
 
   max_idx, baselines, baselines_std, baseline_integral, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
@@ -140,6 +141,14 @@ def generic_reco(
 
     mask_selected_events = mask_low_charge_seed
 
+  if opt is not None:
+    ieta, iphi = eta_phi_ch_map.eta_phi_ch_map()
+    ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
+    iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
+    return_dict.update({
+      f"{det}_ieta": ieta, f"{det}_iphi": iphi
+    })
+
   if do_timing:
     rise = signal_window[:, :, (signal_samples_pre_peak - rise_samples_pre_peak):(signal_samples_pre_peak + rise_samples_post_peak)]
     rise_interp = ndimage.zoom(rise, [1, 1, interpolation_factor])
@@ -155,7 +164,38 @@ def generic_reco(
     f"{det}_peak_pos": max_idx, f"{det}_ich": ich,
     f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_samples_std": values_std,
     f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std, f"{det}_baseline_integral": baseline_integral,
-    f"{det}_charge": charge, f"{det}_wave": waves, f"{det}_t_wave": tWave
+    f"{det}_charge": charge
   })
 
+  if save_some_waves:
+    save_waves_mask = np.random.uniform(size=(waves.shape[0],)) > 0.01
+    waves[save_waves_mask, ...] = 0
+    tWave[save_waves_mask, ...] = 0
+    return_dict.update({f"{det}_waves": waves, f"{det}_tWave": tWave})
+
   return mask_selected_events, return_dict
+
+
+def hodo_reco(tree):
+  reco_dict = {}
+  coords_list = ["x1", "x2", "y1", "y2"]
+  branches = tree.arrays(
+    [f"hodo_{coord}_nclusters" for coord in coords_list] +
+    [f"hodo_{coord}_pos" for coord in coords_list],
+    library="ak"
+  )
+  mask_dict = np.ones(len(branches[f"hodo_{coords_list[0]}_nclusters"]), dtype=bool)
+  for coord in coords_list:
+    clus = branches[f"hodo_{coord}_nclusters"]
+    pos = branches[f"hodo_{coord}_pos"]
+    mask = (clus > 0)
+    pos_first_cluster = ak.to_numpy(ak.where(mask, ak.firsts(pos), -999))
+    mask_single_cluster = ak.to_numpy(clus == 1)
+    average_all_clusters = ak.to_numpy(ak.where(mask, ak.sum(pos, axis=1) / clus, -999.0 ))
+    reco_dict.update({
+      f"hodo_{coord}_cl0_pos": pos_first_cluster,
+      f"hodo_{coord}_single_cl_flag": mask_single_cluster,
+      f"hodo_{coord}_avg_pos": average_all_clusters,
+    })
+
+  return mask_dict, reco_dict

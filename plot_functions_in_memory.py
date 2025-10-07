@@ -150,7 +150,6 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
 
     else:
         ROOT.gStyle.SetPalette(ROOT.kLightTemperature)
-
         if just_draw:
           h = f.Get(f"{name}")
         else:
@@ -167,8 +166,7 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
                 y.astype(np.float64),
                 z.astype(np.float64))
 
-          h.Scale(1/nevents)
-
+        h.Scale(1/h.GetEntries())
         h.Draw("ZCOL")
         h.SetContour(int(row.contours))
         h.GetZaxis().SetTitle(row.zlabel)
@@ -190,6 +188,7 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
     if just_draw: c.Write("", ROOT.TObject.kOverwrite)
     else:
       c.Write()
+      h.Scale(h.GetEntries())
       h.Write()
     f.Close()
     c.Close()

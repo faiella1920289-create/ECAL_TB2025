@@ -5,14 +5,14 @@ main_folder=$4
 
 echo "conf: $conf"
 
-mkdir -p ${main_folder}/run_$run_no/all_spill/
+mkdir ${main_folder}/run_$run_no/all_spill/
 
 echo "hadding (output in /dev/null - to debug open the code...)"
 for folder in $(ls -1d ${main_folder}/run_$run_no/current_spill/*/); do
+  mkdir ${main_folder}/run_$run_no/all_spill/$(basename $folder)
   for file in $(ls -1 $folder/*.root); do
     source="${main_folder}/run_$run_no/current_spill/$(basename $folder)/$(basename $file)"
     dest="${main_folder}/run_$run_no/all_spill/$(basename $folder)/$(basename $file)"
-    mkdir -p ${main_folder}/run_$run_no/all_spill/$(basename $folder)
 
     filename=$(basename $file)
     plot="${filename::-5}"

@@ -1,5 +1,6 @@
 name,title,folder,x,y,z,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,contours,xlabel,ylabel,zlabel,cluster,logz
 charge_sum_5x5, ,main,ecal_charge_sum_5x5,0,0, ,kBlue,1000,0,40000,0,0,0,0,charge_{5x5} [ADC counts],ADC counts, , ,
+mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,15,46,61,15,1,16,25,eta,phi,sampleindex,0,0
 mean_sample_max, ,main,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,15,46,61,15,1,16,25,eta,phi,sampleindex,0,0
 mean_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
 std_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1

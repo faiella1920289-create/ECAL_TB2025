@@ -1,0 +1,9 @@
+name,title,folder,x,y,z,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,contours,xlabel,ylabel,zlabel,cluster,logz
+mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,15,46,61,15,1,16,25,eta,phi,sampleindex,0,0
+mean_sample_max, ,main,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,15,46,61,15,1,16,25,eta,phi,sampleindex,0,0
+mean_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
+std_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
+mean_pedestals, ,main,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,0
+std_pedestals, ,main,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
+baseline_integral, ,main,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,0
+mean_values_max, ,main,ecal_ieta,ecal_iphi,ecal_peak, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
