@@ -1,22 +1,5 @@
 #!/bin/bash
 
-# --- launch settings with dynamic beam|laser choice ---
-# if [ "$#" -ne 2 ]; then
-#     echo "Usage: $0 <run_number> <spill_number>"
-#     exit 1
-# fi
-# RUN=$1
-# SPILL=$(printf "%04d" $2)
-# SPILL_NO=$((10#$SPILL))
-# SPILL_LASER=10
-# SPILL_REP=5
-# OPT=$(($SPILL_NO % $SPILL_LASER))
-# if [ "$OPT" -eq 0 ]; then
-#     option="laser"
-# else
-#     option="beam"
-# fi
-
 # --- launch settings with beam|laser as input parameter ---
 if [ "$#" -ne 3 ]; then
     echo "Usage: $0 <run_number> <spill_number> <beam|laser|beam+laser>"
