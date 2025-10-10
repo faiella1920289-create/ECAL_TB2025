@@ -26,7 +26,7 @@ def main(arguments):
     parser.add_argument("-ro", f"--reco-output-dir", type=str, required=True, help="directory for reco output")
     parser.add_argument("-j", f"--detectors-conf-json", type=str, required=False, help="detectors reco configuration", default="conf.json")
     parser.add_argument("-ct", f"--compression-type", type=str, required=False, help="mcp reco configuration", default="lz4")
-    parser.add_argument("-p",  f"--plot-list", type=str, required=True, help="csv file with plot list (mcp and ecal)")
+    parser.add_argument("-p",  f"--plot-list", type=str, required=True, help="csv file with plot list")
     parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
     parser.add_argument("-hd", f"--hadd-cmd", type=str, required=False, default="", help="command to hadd")
     parser.add_argument("-opt", f"--option", type=str, required=True, help="beam or laser")
@@ -76,6 +76,10 @@ def main(arguments):
             print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
     print(f"reco took: {-time_reco + time.time():.1f} s")
 
+    # time run controller
+    time_rc = tree["time_rc"].array(library="np")
+    print(time_rc)
+
     # add event number
     n_events = np.arange(reco_dict["ecal"]["mask"].shape[0])
     reco_dict["events"] = {"mask": np.ones((n_events.shape[0],), dtype=bool), "arrays": {"n_event": n_events}}
@@ -105,7 +109,7 @@ def main(arguments):
     plotconf_df.apply(lambda row: plot_functions.plot(row, arrays, args.plot_output_folder), axis=1)
     print(f"plotting current spill took: {-time_plot + time.time():.1f} s")
 
-    os.system(args.hadd_cmd) #goes in parallel
+    # os.system(args.hadd_cmd) #goes in parallel
 
     # writing
     time_write = time.time()

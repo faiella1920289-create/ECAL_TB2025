@@ -35,11 +35,13 @@ WORKING_DIR=$(pwd)
 # --- Start global timer ---
 start_time=$(date +%s)
 
+#source /cvmfs/sft.cern.ch/lcg/views/LCG_108/x86_64-el9-gcc13-opt/setup.sh
+
 RECO_UNPACKED_OUTDIR="/eos/cms/store/group/dpg_ecal/comm_ecal/upgrade/testbeam/ECALTB_H4_Oct2025/"
 mkdir -p ${RECO_UNPACKED_OUTDIR}/unpacked/run_$RUN/
 UNPACKED_FILE="${RECO_UNPACKED_OUTDIR}/unpacked/run_$RUN/run_${RUN}_spill_${SPILL}_unpacked.root"
 
-EBETE_DIR="/afs/cern.ch/user/e/ecalgit/EBeTe"
+EBETE_DIR="/afs/cern.ch/user/e/ecalgit/EBeTe/"
 cd ${EBETE_DIR}
 
 # --- EBeTe compilation ---
@@ -60,17 +62,7 @@ cd $WORKING_DIR
 
 # --- Reco and plotting ---
 echo "Running reconstruction and plotting..."
-#source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh
-source ${HOME}/ferrari/bin/activate
-# python3 reco_old.py -i ${UNPACKED_FILE} \
-#     -r "$RUN" \
-#     -s "$SPILL" \
-#     -ro ${RECO_UNPACKED_OUTDIR}/reco/run_$RUN/ \
-#     -ej ecal_conf.json \
-#     -mj mcp_conf.json \
-#     -p plotlists/plot_list.csv \
-#     -po $PLOT_MAIN_FOLDER/run_$RUN/current_spill/ \
-#     -hd "source ${WORKING_DIR}/hadd.sh $RUN plot_list.csv $SPILL $PLOT_MAIN_FOLDER &"
+#source ${HOME}/ferrari_on_cvmfs_108/bin/activate
 
 python3 reco.py -i ${UNPACKED_FILE} \
     -r "$RUN" \
