@@ -49,7 +49,7 @@ def main(arguments):
     tree = file[mode["tree_name"]]
     print(f"open file took {-time_open + time.time():.1f} s")
 
-    # ECAL and MCP decoding
+    # reconstruction
     time_reco = time.time()
     reco_dict = {}
     for detector in detectors_dict:
@@ -58,17 +58,27 @@ def main(arguments):
         dd = detectors_dict[detector]
         if dd["generic_reco"]:
             if dd["active_ch_list"] == None: dd["active_ch_list"] = slice(None)
-            waves = tree[dd["waves_branch"]].array(library="np")[:, dd["active_ch_list"], :]
+            waves = tree[dd["waves_branch"]].array(library="np")[:, dd["active_ch_list"], :].astype(np.uint16)
             if dd["decode"]: waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(waves)
             if dd["to_be_inverted"]: waves = 4096 - waves #must be inverted if the signal are with negative rising slope
             reco_dict[detector] = {}
             reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco(waves, detector, opt, **dd["reco_conf"])
             print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
-        else:
+        elif dd["generic_reco"] == False and detector == "hodo":
             reco_dict[detector] = {}
-            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.hodo_reco(tree)
+            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.hodo_reco(tree, detector)
+            print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
+        else:
+            if dd["active_ch_list"] == None: dd["active_ch_list"] = slice(None)
+            bcp_clk = tree[dd["waves_branch"]].array(library="np")[:, dd["active_ch_list"], :]
+            reco_dict[detector] = {}
+            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.bcp_reco(bcp_clk, detector)
             print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
     print(f"reco took: {-time_reco + time.time():.1f} s")
+
+    # add event number
+    n_events = np.arange(reco_dict["ecal"]["mask"].shape[0])
+    reco_dict["events"] = {"mask": np.ones((n_events.shape[0],), dtype=bool), "arrays": {"n_event": n_events}}
 
     # merging
     time_merge = time.time()
@@ -80,7 +90,7 @@ def main(arguments):
     # plotting
     time_plot = time.time()
     n_cpus = 8
-    plotconf_df = pd.read_csv(args.plot_list, sep=",")
+    plotconf_df = pd.read_csv(args.plot_list, sep=",", comment='#')
     plotconf_df = plotconf_df.fillna("")
     ROOT.gROOT.LoadMacro("root_logon.C")
     # os.system(f"mkdir -p {args.plot_output_folder}")

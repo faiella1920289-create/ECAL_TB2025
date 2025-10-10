@@ -5,7 +5,7 @@
             "beam": {
                 "plot_list": "plotlists/plot_list.csv",
                 "tree_name": "h4",
-                "detector_list": ["ecal", "mcp", "hodo"],
+                "detector_list": ["ecal", "mcp", "hodo", "bcp"],
                 "option": null
             },
             "laser": {
@@ -67,6 +67,24 @@
             "decode": false,
             "to_be_inverted": false,
             "waves_branch": null,
+            "generic_reco": false,
+            "reco_conf": {
+                "signal_samples_pre_peak": 0,
+                "signal_samples_post_peak": 0,
+                "charge_zerosup_peak_threshold": 0,
+                "seed_charge_threshold": 0,
+                "do_5x5": false,
+                "do_timing": false,
+                "save_some_waves": true
+            }
+        },
+
+        "bcp": {
+            "_comment": "null active_ch_list means all channels active",
+            "active_ch_list": null,
+            "decode": false,
+            "to_be_inverted": false,
+            "waves_branch": "bcp_clk",
             "generic_reco": false,
             "reco_conf": {
                 "signal_samples_pre_peak": 0,

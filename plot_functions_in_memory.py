@@ -44,9 +44,38 @@ def convert_root_cut_to_numpy_expr(cut_str, available_vars):
     for op in comp_ops:
         # Wrap expressions with comparison operators, avoiding double wrapping
         pattern = rf'(?<!\()([^\s&|()]+(?:\s*\[[^\]]+\])?\s*{re.escape(op)}\s*[^\s&|()]+)(?!\))'
+        # pattern = rf'(?<!\()([^\s&|()]+(?:\s*\[[^\]]+\])?\s*{re.escape(op)}\s*[+-]?\d*\.?\d*(?:e[+-]?\d+)?|[^\s&|()]+)(?!\))'
         expr = re.sub(pattern, r'(\1)', expr)
 
     return expr
+
+# def convert_root_cut_to_numpy_expr(cut_str, available_vars):
+#     # 1. ROOT → NumPy logical operators
+#     cut_str = cut_str.replace("&&", "&").replace("||", "|")
+
+#     # 2. Rimuovi spazi inutili
+#     cut_str = cut_str.strip()
+
+#     # 3. Proteggi le variabili per evitare risostituzioni
+#     for var in sorted(available_vars, key=len, reverse=True):
+#         pattern = r'\b' + re.escape(var) + r'\b'
+#         cut_str = re.sub(pattern, f'@@VAR_{var}@@', cut_str)
+
+#     # 4. Ripristina come uproot_dict["var"]
+#     for var in available_vars:
+#         cut_str = cut_str.replace(f'@@VAR_{var}@@', f'uproot_dict["{var}"]')
+
+#     # 5. Rendi espliciti i numeri negativi: inserisci spazio prima del segno meno se serve
+#     cut_str = re.sub(r'(?<==)-', ' -', cut_str)
+
+#     # 6. Aggiungi parentesi ai confronti (>=, <=, ==, !=, >, <)
+#     comp_ops = ['>=', '<=', '==', '!=', '>', '<']
+#     for op in comp_ops:
+#         # match espressioni come uproot_dict["x"]== -1 oppure >=3
+#         pattern = rf'(?<!\()(\s*uproot_dict\["[^"]+"\]\s*{re.escape(op)}\s*-?\d*\.?\d*(?:e[+-]?\d+)?)(?!\))'
+#         cut_str = re.sub(pattern, r'(\1)', cut_str)
+
+#     return cut_str
 
 
 def plot(row, uproot_dict, outputfolder, just_draw=False):
@@ -120,7 +149,7 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         bin2 = h.FindLastBinAbove(max_value/2)
         fwhm = h.GetBinCenter(bin2) - h.GetBinCenter(bin1)
 
-        pave = ROOT.TPaveText(0.25, 0.7, 0.45, 0.88, "NDC")
+        pave = ROOT.TPaveText(0.65, 0.7, 0.85, 0.88, "NDC")
         pave.SetFillColor(0)  # Transparent background
         pave.SetTextFont(42)
         pave.SetTextSize(0.03)
@@ -140,10 +169,21 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
           h = f.Get(f"{name}")
         else:
           y = eval_formula(row.y, uproot_dict)[mask].ravel()
-          h = ROOT.TH2F(name, row.title,
+          if "bcp" in name.lower():
+            y_min = np.min(y)
+            y_max = np.max(y)
+            y_range = y_max - y_min
+            y_min -= 0.05 * y_range
+            y_max += 0.05 * y_range
+            h = ROOT.TH2F(name, row.title,
+                      int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
+                      int(row.binsny), y_min, y_max)
+            h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
+          else:
+            h = ROOT.TH2F(name, row.title,
                       int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                       int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-          h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
+            h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
 
         h.Draw("ZCOL")
         h.GetYaxis().SetTitle(row.ylabel)
@@ -153,28 +193,30 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         if just_draw:
           h = f.Get(f"{name}")
         else:
-          y = eval_formula(row.y, uproot_dict)[mask].ravel()
+          y_notflat = eval_formula(row.y, uproot_dict)[mask]
+          n_ch = y_notflat.shape[1]
+          y = y_notflat.ravel()
           z = eval_formula(row.z, uproot_dict)[mask].ravel()
 
           h = ROOT.TH2D(name, row.title,
                             int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                             int(row.binsny), float(row.binsminy), float(row.binsmaxy))
 
-
           h.FillN(len(x),
                 x.astype(np.float64),
                 y.astype(np.float64),
-                z.astype(np.float64))
+                z.astype(np.float64)*n_ch)
 
         h.Scale(1/h.GetEntries())
         h.Draw("ZCOL")
         h.SetContour(int(row.contours))
         h.GetZaxis().SetTitle(row.zlabel)
         h.GetYaxis().SetTitle(row.ylabel)
-        h.GetXaxis().SetNdivisions(120)
-        h.GetYaxis().SetNdivisions(120)
-        c.SetGrid()
-        c.SetRightMargin(0.15)
+        h.GetXaxis().SetNdivisions(505)
+        h.GetYaxis().SetNdivisions(505)
+        # h.GetXaxis().SetNdivisions(505, False)
+        # h.GetYaxis().SetNdivisions(505, False)
+        c.SetRightMargin(0.18)
 
     h.GetXaxis().SetTitle(row.xlabel)
 

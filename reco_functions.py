@@ -16,7 +16,7 @@ def decode_ecal_waves(waves):
     return amplitudes, is_valid, gain_is_1
 
 
-def split(waveforms, threshold=20, pre=5, post=10):
+def split(waveforms, threshold=20, pre=5, post=10, baseline_samples=10):
 
     # Assume waveforms is shape (E, C, S)
     E, C, S = waveforms.shape
@@ -25,8 +25,8 @@ def split(waveforms, threshold=20, pre=5, post=10):
     argmax_idx = np.argmax(waveforms, axis=2)  # shape (E, C)
 
     # Step 2: Build offsets
-    window_offsets = np.arange(-5, 10).reshape(1, 1, -1)         # shape (1,1,15)
-    baseline_offsets = np.arange(-15, -5).reshape(1, 1, -1)      # shape (1,1,10)
+    window_offsets = np.arange(-int(pre), int(post)).reshape(1, 1, -1)         # shape (1,1,15)
+    baseline_offsets = np.arange(-int(pre)-int(baseline_samples), -int(pre)).reshape(1, 1, -1)      # shape (1,1,10)
 
     # Expand argmax index for broadcasting
     argmax_exp = argmax_idx[:, :, np.newaxis]  # shape (E, C, 1)
@@ -76,11 +76,11 @@ def generic_reco(
   signal_samples_pre_peak=5, signal_samples_post_peak=10,
   charge_zerosup_peak_threshold=10, seed_charge_threshold=50,
   do_5x5=True,
-  do_timing=False, save_some_waves=True, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20
+  do_timing=False, save_some_waves=True, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20, baseline_samples=10
 ):
 
   max_idx, baselines, baselines_std, baseline_integral, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
-  print(baseline_integral.shape)
+  # print(baseline_integral.shape)
 
   values_mean = np.mean(waves, axis=2) # mean of all values
   values_std = np.std(waves, axis=2)   # std of all values
@@ -156,14 +156,15 @@ def generic_reco(
     peak_interp = rise_interp.max(axis=2)
 
     pseudo_t = np.argmax(rise_interp > np.repeat((peak_interp*cf)[:, :, np.newaxis], rise_interp.shape[2], axis=2), axis=2).astype(float)
+    pseudo_t += np.random.uniform(low=-0.5, high=0.5, size=pseudo_t.shape)
     pseudo_t /= float(sampling_rate*interpolation_factor)
-    pseudo_t += (max_idx / sampling_rate)
+    pseudo_t += ((max_idx - rise_samples_pre_peak) / sampling_rate)
     return_dict.update({f"{det}_cf_time": pseudo_t, f"{det}_peak_interp": peak_interp})
 
   return_dict.update({
     f"{det}_peak_pos": max_idx, f"{det}_ich": ich,
     f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_samples_std": values_std,
-    f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std, f"{det}_baseline_integral": baseline_integral,
+    f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std, f"{det}_baseline_integral": baseline_integral/baseline_samples*signal_window.shape[2],
     f"{det}_charge": charge
   })
 
@@ -176,26 +177,43 @@ def generic_reco(
   return mask_selected_events, return_dict
 
 
-def hodo_reco(tree):
+def hodo_reco(tree, detector_name):
+  det = detector_name
   reco_dict = {}
   coords_list = ["x1", "x2", "y1", "y2"]
   branches = tree.arrays(
-    [f"hodo_{coord}_nclusters" for coord in coords_list] +
-    [f"hodo_{coord}_pos" for coord in coords_list],
+    [f"{det}_{coord}_nclusters" for coord in coords_list] +
+    [f"{det}_{coord}_pos" for coord in coords_list],
     library="ak"
   )
-  mask_dict = np.ones(len(branches[f"hodo_{coords_list[0]}_nclusters"]), dtype=bool)
+  mask_dict = np.ones(len(branches[f"{det}_{coords_list[0]}_nclusters"]), dtype=bool)
   for coord in coords_list:
-    clus = branches[f"hodo_{coord}_nclusters"]
-    pos = branches[f"hodo_{coord}_pos"]
+    clus = branches[f"{det}_{coord}_nclusters"]
+    pos = branches[f"{det}_{coord}_pos"]
     mask = (clus > 0)
     pos_first_cluster = ak.to_numpy(ak.where(mask, ak.firsts(pos), -999))
     mask_single_cluster = ak.to_numpy(clus == 1)
     average_all_clusters = ak.to_numpy(ak.where(mask, ak.sum(pos, axis=1) / clus, -999.0 ))
     reco_dict.update({
-      f"hodo_{coord}_cl0_pos": pos_first_cluster,
-      f"hodo_{coord}_single_cl_flag": mask_single_cluster,
-      f"hodo_{coord}_avg_pos": average_all_clusters,
+      f"{det}_{coord}_cl0_pos": pos_first_cluster,
+      f"{det}_{coord}_single_cl_flag": mask_single_cluster,
+      f"{det}_{coord}_avg_pos": average_all_clusters,
     })
 
   return mask_dict, reco_dict
+
+
+def bcp_reco(bcp_clk, detector_name):
+  det = detector_name
+  reco_dict = {}
+  mask = np.ones((bcp_clk.shape[0],), dtype=bool)
+  bcp_clk = bcp_clk.astype(np.int64)
+  bcp1_clk = bcp_clk[:, 0, :]
+  bcp2_clk = bcp_clk[:, 1, :]
+  bcp1_clk_mean = np.tile(np.mean(bcp1_clk, axis=0), (bcp1_clk.shape[0], 1))
+  bcp2_clk_mean = np.tile(np.mean(bcp2_clk, axis=0), (bcp2_clk.shape[0], 1))
+  reco_dict.update({f"{det}1_clk": bcp1_clk, f"{det}2_clk": bcp2_clk, 
+    f"{det}1_clk_mean": bcp1_clk_mean.astype(int), f"{det}2_clk_mean": bcp2_clk_mean.astype(int)
+  })
+
+  return mask, reco_dict

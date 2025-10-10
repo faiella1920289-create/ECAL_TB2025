@@ -19,7 +19,7 @@
 
 # --- launch settings with beam|laser as input parameter ---
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <run_number> <spill_number> <beam|laser>"
+    echo "Usage: $0 <run_number> <spill_number> <beam|laser|beam+laser>"
     exit 1
 fi
 RUN=$1
@@ -27,7 +27,23 @@ SPILL=$(printf "%04d" $2)
 SPILL_NO=$((10#$SPILL))
 SPILL_LASER=10
 SPILL_REP=5
-option=$3
+beam_or_laser=$3
+if [ "$beam_or_laser" == "beam" ]; then
+    option="beam"
+elif [ "$beam_or_laser" == "laser" ]; then
+    option="laser"
+elif [ "$beam_or_laser" == "beam+laser" ]; then
+    OPT=$(($SPILL_NO % $SPILL_LASER))
+    if [ "$OPT" -eq 0 ]; then
+        option="laser"
+    else
+        option="beam"
+    fi
+else
+    echo "Third argument must be 'beam', 'laser' or 'beam+laser'"
+    exit 1
+fi
+SPILL_TYPE="${SPILL}_${option}"
 
 PLOT_MAIN_FOLDER="/eos/user/m/mcampana/www/h4dqm/ECAL_TB_2025"
 
@@ -89,7 +105,14 @@ total_time=$((end_time - start_time))
 echo "Total elapsed time: $total_time seconds."
 
 # --- Saving plot for selected spills ---
-if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_LASER)) -eq 0 ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
-    echo ">>> Spill $SPILL selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL <<<"
-    cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL"
+if [ "$beam_or_laser" == "beam" ] || [ "$beam_or_laser" == "laser" ]; then
+    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
+        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
+        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
+    fi
+else
+    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_LASER)) -eq 0 ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
+        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
+        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
+    fi
 fi
