@@ -74,7 +74,6 @@ python3 reco.py -i ${UNPACKED_FILE} \
     -hd "source ${WORKING_DIR}/hadd.sh $RUN plotlists/plot_list_$option.csv $SPILL $PLOT_MAIN_FOLDER &" \
     -opt $option
 
-echo "----------------- unpacking, reco and plotting single spill done -----------------"
 end_time=$(date +%s)
 total_time=$((end_time - start_time))
 echo "Total elapsed time: $total_time seconds."

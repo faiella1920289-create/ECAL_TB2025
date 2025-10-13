@@ -47,6 +47,11 @@ def main(arguments):
     time_open = time.time()
     file = uproot.open(args.input)
     tree = file[mode["tree_name"]]
+    print("Tree contains: {n_events} events")
+    if n_events == 0:
+      print("Tree contains 0 events -> exiting")
+      sys.exit(0)
+
     print(f"open file took {-time_open + time.time():.1f} s")
 
     # reconstruction
@@ -109,7 +114,7 @@ def main(arguments):
     plotconf_df.apply(lambda row: plot_functions.plot(row, arrays, args.plot_output_folder), axis=1)
     print(f"plotting current spill took: {-time_plot + time.time():.1f} s")
 
-    # os.system(args.hadd_cmd) #goes in parallel
+    os.system(args.hadd_cmd) #goes in parallel
 
     # writing
     time_write = time.time()
@@ -119,6 +124,8 @@ def main(arguments):
         tree = f.mktree("tree", branch_types)
         tree.extend(arrays)
     print(f"writing reco output took {-time_write + time.time():.1f} s")
+
+    print("----------------- unpacking, reco and plotting single spill done -----------------")
 
 if __name__ == '__main__':
     main(sys.argv[1:])
