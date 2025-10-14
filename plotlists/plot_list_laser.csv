@@ -1,5 +1,5 @@
 name,title,folder,x,y,z,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,contours,xlabel,ylabel,zlabel,cluster,logz
-laser_mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,sampleindex,0,0
+laser_mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,ADC counts,0,0
 laser_mean_sample_max, ,main,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,sampleindex,0,0
 laser_mean_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
 laser_std_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
