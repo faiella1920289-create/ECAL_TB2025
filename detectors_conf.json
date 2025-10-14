@@ -1,6 +1,5 @@
 {
     "global": {
-        "map_filename": "maps/tb_all.csv",
         "spill_type": {
             "beam": {
                 "plot_list": "plotlists/plot_list.csv",
@@ -26,12 +25,14 @@
 
     "detectors": {
         "ecal": {
-            "_comment": "null active_ch_list means all channels active",
-            "active_ch_list": null,
+            "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
+            "ch_map": "maps/tb_map.csv",
+            "chid_vars_list": ["n_bcp","tt","ch_in_tt","module"],
             "decode": true,
             "to_be_inverted": false,
             "waves_branch": "xtal_sample",
             "generic_reco": true,
+            "geo_needed": true,
             "reco_conf": {
                 "signal_samples_pre_peak": 5,
                 "signal_samples_post_peak": 10,
@@ -43,13 +44,34 @@
             }
         },
 
+        "mem": {
+            "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
+            "ch_map": "maps/tb_map.csv",
+            "chid_vars_list": ["n_bcp","tt","ch_in_tt"],
+            "decode": true,
+            "to_be_inverted": false,
+            "waves_branch": "xtal_sample",
+            "generic_reco": true,
+            "geo_needed": false,
+            "reco_conf": {
+                "signal_samples_pre_peak": 5,
+                "signal_samples_post_peak": 10,
+                "charge_zerosup_peak_threshold": 10,
+                "seed_charge_threshold": 50,
+                "do_5x5": false,
+                "do_timing": false,
+                "save_some_waves": true
+            }
+	},
+
         "mcp": {
-            "_comment": "null active_ch_list means all channels active",
-            "active_ch_list": [1, 2, 3, 4],
+            "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
+            "ch_map": [1, 2, 3, 4],
             "decode": false,
             "to_be_inverted": true,
             "waves_branch": "dgtz_sample",
             "generic_reco": true,
+            "geo_needed": false,
             "reco_conf": {
                 "signal_samples_pre_peak": 6,
                 "signal_samples_post_peak": 6,
@@ -62,12 +84,13 @@
         },
 
         "hodo": {
-            "_comment": "null active_ch_list means all channels active",
-            "active_ch_list": null,
+            "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
+            "ch_map": null,
             "decode": false,
             "to_be_inverted": false,
             "waves_branch": null,
             "generic_reco": false,
+            "geo_needed": false,
             "reco_conf": {
                 "signal_samples_pre_peak": 0,
                 "signal_samples_post_peak": 0,
@@ -80,12 +103,13 @@
         },
 
         "bcp": {
-            "_comment": "null active_ch_list means all channels active",
-            "active_ch_list": null,
+            "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
+            "ch_map": null,
             "decode": false,
             "to_be_inverted": false,
             "waves_branch": "bcp_clk",
             "generic_reco": false,
+            "geo_needed": false,
             "reco_conf": {
                 "signal_samples_pre_peak": 0,
                 "signal_samples_post_peak": 0,

@@ -1,6 +1,5 @@
 import numpy as np
 import awkward as ak
-import eta_phi_ch_map
 from scipy import ndimage
 from multiprocessing import Pool
 
@@ -72,7 +71,7 @@ def find_5x5(charge_mean, ieta, iphi):
 
 
 def generic_reco(
-  waves, detector_name, opt,
+  waves, detector_name, opt, id=None, geo_dict=None,
   signal_samples_pre_peak=5, signal_samples_post_peak=10,
   charge_zerosup_peak_threshold=10, seed_charge_threshold=50,
   do_5x5=True,
@@ -106,48 +105,49 @@ def generic_reco(
   mask_selected_events = np.ones((charge.shape[0],), dtype=bool)
   det = detector_name
 
-  if do_5x5:
-    charge_mean = np.mean(charge, axis=0)
-    seed_ch = -999
-    ieta, iphi = eta_phi_ch_map.eta_phi_ch_map()
 
-    mask_5x5, seed_ch = find_5x5(charge_mean, ieta, iphi)
+  if id is not None:
+    for var in id:
+      return_dict.update({f"{det}_{var}": np.repeat(id[var][np.newaxis, :], waves.shape[0], axis=0)})
 
-    charge_seed = charge[:, seed_ch]
-    mask_low_charge_seed = charge_seed > seed_charge_threshold
 
-    # amplitude_map of the 5x5 matrix
-    charge_sum_5x5 = np.sum(charge[:, mask_5x5], axis=1)
-    charge_fraction_5x5 = charge / charge_sum_5x5[:, np.newaxis]
-
-    ieta_centroid = charge_fraction_5x5[:, mask_5x5] @ ieta[mask_5x5]
-    iphi_centroid = charge_fraction_5x5[:, mask_5x5] @ iphi[mask_5x5]
-
-    ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
-    iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
-
-    iphi_within_5x5 = iphi - iphi[0, seed_ch]
-    ieta_within_5x5 = ieta - ieta[0, seed_ch]
-
-    seed_ch = np.repeat(np.ones(1,)*seed_ch, charge_sum_5x5.shape[0], axis=0)
-
-    return_dict.update({
-      f"{det}_charge_sum_5x5": charge_sum_5x5, f"{det}_charge_seed": charge_seed,
-      f"{det}_iphi_within_5x5": iphi_within_5x5, f"{det}_ieta_within_5x5": ieta_within_5x5,
-      f"{det}_ieta": ieta, f"{det}_iphi": iphi,
-      f"{det}_charge_divided_5x5": charge_fraction_5x5, f"{det}_seed_ch": seed_ch,
-      f"{det}_ieta_centroid": ieta_centroid, f"{det}_iphi_centroid": iphi_centroid
-    })
-
-    mask_selected_events = mask_low_charge_seed
-
-  if opt is not None:
-    ieta, iphi = eta_phi_ch_map.eta_phi_ch_map()
+  if geo_dict is not None:
+    ieta, iphi = geo_dict["ieta"], geo_dict["iphi"]
     ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
     iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
     return_dict.update({
       f"{det}_ieta": ieta, f"{det}_iphi": iphi
     })
+
+    if do_5x5:
+      charge_mean = np.mean(charge, axis=0)
+      seed_ch = -999
+
+      mask_5x5, seed_ch = find_5x5(charge_mean, ieta, iphi)
+
+      charge_seed = charge[:, seed_ch]
+      mask_low_charge_seed = charge_seed > seed_charge_threshold
+
+    # amplitude_map of the 5x5 matrix
+      charge_sum_5x5 = np.sum(charge[:, mask_5x5], axis=1)
+      charge_fraction_5x5 = charge / charge_sum_5x5[:, np.newaxis]
+
+      ieta_centroid = charge_fraction_5x5[:, mask_5x5] @ ieta[mask_5x5]
+      iphi_centroid = charge_fraction_5x5[:, mask_5x5] @ iphi[mask_5x5]
+
+      iphi_within_5x5 = iphi - iphi[0, seed_ch]
+      ieta_within_5x5 = ieta - ieta[0, seed_ch]
+
+      seed_ch = np.repeat(np.ones(1,)*seed_ch, charge_sum_5x5.shape[0], axis=0)
+
+      return_dict.update({
+        f"{det}_charge_sum_5x5": charge_sum_5x5, f"{det}_charge_seed": charge_seed,
+        f"{det}_iphi_within_5x5": iphi_within_5x5, f"{det}_ieta_within_5x5": ieta_within_5x5,
+        f"{det}_charge_divided_5x5": charge_fraction_5x5, f"{det}_seed_ch": seed_ch,
+        f"{det}_ieta_centroid": ieta_centroid, f"{det}_iphi_centroid": iphi_centroid
+      })
+
+      mask_selected_events = mask_low_charge_seed
 
   if do_timing:
     rise = signal_window[:, :, (signal_samples_pre_peak - rise_samples_pre_peak):(signal_samples_pre_peak + rise_samples_post_peak)]
