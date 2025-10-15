@@ -148,7 +148,7 @@ def generic_reco(
         f"{det}_ieta_centroid": ieta_centroid, f"{det}_iphi_centroid": iphi_centroid
       })
 
-      mask_selected_events = mask_low_charge_seed
+      #mask_selected_events = mask_low_charge_seed
 
     ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
     iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
