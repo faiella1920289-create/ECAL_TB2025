@@ -5,7 +5,7 @@ import reco_functions
 import pandas as pd
 import plot_functions_in_memory as plot_functions
 from multiprocessing import Pool
-
+import traceback
 
 def main(arguments):
     print("Entered reco.py")
@@ -53,39 +53,42 @@ def main(arguments):
     time_reco = time.time()
     reco_dict = {}
     for detector in detectors_dict:
-        time_reco_det = time.time()
-        if detector not in mode["detector_list"]: continue
-        dd = detectors_dict[detector]
+        try:
+            time_reco_det = time.time()
+        	if detector not in mode["detector_list"]: continue
+        	dd = detectors_dict[detector]
 
-        reco_dict[detector], geo_dict, chid_dict = {}, None, None
-        if dd["ch_map"] == None: active_ch_list = slice(None)
-        elif isinstance(dd["ch_map"], str):
-          map_df = pd.read_csv(dd["ch_map"])
-          active_row_list = (map_df["type"] == detector).tolist()
-          active_ch_list = (map_df["branch_ch"][map_df["type"] == detector]).tolist()
-          chid_dict = {var: map_df[var].to_numpy()[active_row_list] for var in dd["chid_vars_list"]}
-          if dd["geo_needed"]:
-            geo_dict = {coord: map_df[coord].to_numpy()[active_row_list] for coord in ["ieta", "iphi"]}
-        elif isinstance(dd["ch_map"], list):
-          active_ch_list = dd["ch_map"]
+        	reco_dict[detector], geo_dict, chid_dict = {}, None, None
+        	if dd["ch_map"] == None: active_ch_list = slice(None)
+        	elif isinstance(dd["ch_map"], str):
+        	  map_df = pd.read_csv(dd["ch_map"])
+        	  active_row_list = (map_df["type"] == detector).tolist()
+        	  active_ch_list = (map_df["branch_ch"][map_df["type"] == detector]).tolist()
+        	  chid_dict = {var: map_df[var].to_numpy()[active_row_list] for var in dd["chid_vars_list"]}
+        	  if dd["geo_needed"]:
+        	    geo_dict = {coord: map_df[coord].to_numpy()[active_row_list] for coord in ["ieta", "iphi"]}
+        	elif isinstance(dd["ch_map"], list):
+        	  active_ch_list = dd["ch_map"]
 
-        if dd["generic_reco"]:
-            waves = tree[dd["waves_branch"]].array(library="np")[:, active_ch_list, :].astype(np.uint16)
-            if dd["decode"]: waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(waves)
-            if dd["remove_last_50_samples"]: waves = waves[:, :, :-50]
-            if dd["to_be_inverted"]: waves = 4096 - waves #must be inverted if the signal are with negative rising slope
-            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco_parallel(
-              waves, detector, opt, id=chid_dict, geo_dict=geo_dict, **dd["reco_conf"]
-            )
-            print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
-        elif detector == "hodo":
-            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.hodo_reco(tree, detector)
-            print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
-        elif detector == "bcp":
-            bcp_clk = tree[dd["waves_branch"]].array(library="np")[:, active_ch_list, :]
-            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.bcp_reco(bcp_clk, detector)
-            print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
-        print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
+        	if dd["generic_reco"]:
+        	    waves = tree[dd["waves_branch"]].array(library="np")[:, active_ch_list, :].astype(np.uint16)
+        	    if dd["decode"]: waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(waves)
+        	    if dd["to_be_inverted"]: waves = 4096 - waves #must be inverted if the signal are with negative rising slope
+        	    reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco(
+        	      waves, detector, opt, id=chid_dict, geo_dict=geo_dict, **dd["reco_conf"]
+        	    )
+        	    print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
+        	elif detector == "hodo":
+        	    reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.hodo_reco(tree, detector)
+        	    print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
+        	elif detector == "bcp":
+        	    bcp_clk = tree[dd["waves_branch"]].array(library="np")[:, active_ch_list, :]
+        	    reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.bcp_reco(bcp_clk, detector)
+        	    print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
+        	print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
+        except Exception:
+            print(traceback.format_exc())
+
     print(f"reco took: {-time_reco + time.time():.1f} s")
 
     # time run controller
@@ -131,7 +134,6 @@ def main(arguments):
         tree.extend(arrays)
     print(f"writing reco output took {-time_write + time.time():.1f} s")
 
-    print(f"total reco.py took {-time_start + time.time():.1f} s")
     print("----------------- unpacking, reco and plotting single spill done -----------------")
 
 if __name__ == '__main__':

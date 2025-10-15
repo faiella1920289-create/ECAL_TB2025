@@ -31,6 +31,7 @@
             "to_be_inverted": false,
             "waves_branch": "xtal_sample",
             "generic_reco": true,
+            "remove_last_50_samples": false,
             "geo_needed": true,
             "reco_conf": {
                 "signal_samples_pre_peak": 5,
@@ -53,6 +54,7 @@
             "waves_branch": "xtal_sample",
             "generic_reco": true,
             "geo_needed": true,
+            "remove_last_50_samples": false,
             "reco_conf": {
                 "signal_samples_pre_peak": 5,
                 "signal_samples_post_peak": 10,
@@ -67,21 +69,24 @@
 
         "mcp": {
             "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
-            "ch_map": [1, 2, 3, 4],
+            "ch_map": [1, 2],
             "decode": false,
             "to_be_inverted": true,
             "waves_branch": "dgtz_sample",
             "generic_reco": true,
             "geo_needed": false,
+            "remove_last_50_samples": true,
             "reco_conf": {
-                "signal_samples_pre_peak": 6,
-                "signal_samples_post_peak": 6,
+                "signal_samples_pre_peak": 12,
+                "signal_samples_post_peak": 15,
                 "charge_zerosup_peak_threshold": 60,
                 "seed_charge_threshold": 0,
                 "do_5x5": false,
                 "do_timing": true,
                 "save_some_waves": true,
-                "sampling_rate": 1
+                "sampling_rate": 5,
+                "rise_samples_pre_peak": 10,
+                "rise_samples_post_peak": 2
             }
         },
 

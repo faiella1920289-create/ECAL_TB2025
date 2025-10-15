@@ -26,6 +26,9 @@ else
     echo "Third argument must be 'beam', 'laser' or 'beam+laser'"
     exit 1
 fi
+
+
+
 SPILL_TYPE="${SPILL}_${option}"
 
 PLOT_MAIN_FOLDER="/eos/user/m/mcampana/www/h4dqm/ECAL_TB_2025"
@@ -91,17 +94,20 @@ end_time=$(date +%s)
 total_time=$((end_time - start_time))
 echo "Total elapsed time: $total_time seconds."
 
-# --- Saving plot for selected spills ---
-if [ "$beam_or_laser" == "beam" ] || [ "$beam_or_laser" == "laser" ]; then
-    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
-        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
-        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
+cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
 
-    fi
-else
-    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_LASER)) -eq 0 ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
-        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
-        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
-
-    fi
-fi
+#
+## --- Saving plot for selected spills ---
+#if [ "$beam_or_laser" == "beam" ] || [ "$beam_or_laser" == "laser" ]; then
+#    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
+#        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
+#        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
+#
+#    fi
+#else
+#    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_LASER)) -eq 0 ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
+#        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
+#        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
+#
+#    fi
+#fi

@@ -54,9 +54,6 @@ def find_5x5(charge_mean, ieta, iphi):
     fake_mask = np.full(ieta.shape, True)
     mask_5x5 = np.full(ieta.shape, True)
 
-    print(fake_mask.shape)
-    print(charge_mean.shape)
-
     while True:
       charge_mean[~fake_mask] = 0
       seed_ch = np.argmax(charge_mean)
@@ -176,9 +173,7 @@ def generic_reco(
   })
 
   if save_some_waves:
-    print(3/max(50, waves.shape[0]))
     drop_waves_mask = np.random.uniform(size=(waves.shape[0],)) > 3/max(50, waves.shape[0])
-    print(drop_waves_mask)
     waves[drop_waves_mask, ...] = 0
     tWave[drop_waves_mask, ...] = 0
     return_dict.update({f"{det}_waves": waves, f"{det}_tWave": tWave, f"{det}_wave_dropped": drop_waves_mask})
@@ -221,8 +216,37 @@ def bcp_reco(bcp_clk, detector_name):
   bcp2_clk = bcp_clk[:, 1, :]
   bcp1_clk_mean = np.tile(np.mean(bcp1_clk, axis=0), (bcp1_clk.shape[0], 1))
   bcp2_clk_mean = np.tile(np.mean(bcp2_clk, axis=0), (bcp2_clk.shape[0], 1))
-  reco_dict.update({f"{det}1_clk": bcp1_clk, f"{det}2_clk": bcp2_clk, 
+  reco_dict.update({f"{det}1_clk": bcp1_clk, f"{det}2_clk": bcp2_clk,
     f"{det}1_clk_mean": bcp1_clk_mean.astype(int), f"{det}2_clk_mean": bcp2_clk_mean.astype(int)
   })
 
   return mask, reco_dict
+
+
+def generic_reco_chunk(args):
+    """
+    Wrapper to handle chunking for multiprocessing.
+    """
+    print("started chunk")
+    waves, det, opt, kwargs = args
+    return generic_reco(waves, det, opt, **kwargs)
+
+
+def generic_reco_parallel(waves, detector_name, opt, n_cpus=2, **kwargs):
+    E = waves.shape[0]
+    chunk_size = (E + n_cpus - 1) // n_cpus  # ceil division
+    chunks = [(waves[i*chunk_size:(i+1)*chunk_size], detector_name, opt, kwargs)
+              for i in range(n_cpus)]
+
+    with Pool(n_cpus) as pool:
+        results = pool.map(generic_reco_chunk, chunks)
+
+    # Combine results
+    masks_list, dicts_list = zip(*results)
+    combined_mask = np.concatenate(masks_list, axis=0)
+
+    combined_dict = {}
+    for key in dicts_list[0].keys():
+        combined_dict[key] = np.concatenate([d[key] for d in dicts_list], axis=0)
+
+    return combined_mask, combined_dict
