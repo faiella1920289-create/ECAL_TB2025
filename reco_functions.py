@@ -54,6 +54,9 @@ def find_5x5(charge_mean, ieta, iphi):
     fake_mask = np.full(ieta.shape, True)
     mask_5x5 = np.full(ieta.shape, True)
 
+    print(fake_mask.shape)
+    print(charge_mean.shape)
+
     while True:
       charge_mean[~fake_mask] = 0
       seed_ch = np.argmax(charge_mean)
@@ -113,11 +116,6 @@ def generic_reco(
 
   if geo_dict is not None:
     ieta, iphi = geo_dict["ieta"], geo_dict["iphi"]
-    ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
-    iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
-    return_dict.update({
-      f"{det}_ieta": ieta, f"{det}_iphi": iphi
-    })
 
     if do_5x5:
       charge_mean = np.mean(charge, axis=0)
@@ -135,8 +133,11 @@ def generic_reco(
       ieta_centroid = charge_fraction_5x5[:, mask_5x5] @ ieta[mask_5x5]
       iphi_centroid = charge_fraction_5x5[:, mask_5x5] @ iphi[mask_5x5]
 
-      iphi_within_5x5 = iphi - iphi[0, seed_ch]
-      ieta_within_5x5 = ieta - ieta[0, seed_ch]
+      iphi_within_5x5 = iphi - iphi[seed_ch]
+      ieta_within_5x5 = ieta - ieta[seed_ch]
+
+      ieta_within_5x5 = np.repeat(ieta_within_5x5[np.newaxis, :], charge.shape[0], axis=0)
+      iphi_within_5x5 = np.repeat(iphi_within_5x5[np.newaxis, :], charge.shape[0], axis=0)
 
       seed_ch = np.repeat(np.ones(1,)*seed_ch, charge_sum_5x5.shape[0], axis=0)
 
@@ -148,6 +149,12 @@ def generic_reco(
       })
 
       mask_selected_events = mask_low_charge_seed
+
+    ieta = np.repeat(ieta[np.newaxis, :], charge.shape[0], axis=0)
+    iphi = np.repeat(iphi[np.newaxis, :], charge.shape[0], axis=0)
+    return_dict.update({
+      f"{det}_ieta": ieta, f"{det}_iphi": iphi
+    })
 
   if do_timing:
     rise = signal_window[:, :, (signal_samples_pre_peak - rise_samples_pre_peak):(signal_samples_pre_peak + rise_samples_post_peak)]

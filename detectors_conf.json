@@ -10,7 +10,7 @@
             "laser": {
                 "plot_list": "plotlists/plot_list_laser.csv",
                 "tree_name": "h4_laser",
-                "detector_list": ["ecal"],
+                "detector_list": ["ecal", "mem"],
                 "option": {
                     "ecal": {
                         "reco_conf": {
@@ -52,7 +52,7 @@
             "to_be_inverted": false,
             "waves_branch": "xtal_sample",
             "generic_reco": true,
-            "geo_needed": false,
+            "geo_needed": true,
             "reco_conf": {
                 "signal_samples_pre_peak": 5,
                 "signal_samples_post_peak": 10,

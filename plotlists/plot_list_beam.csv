@@ -1,16 +1,16 @@
 name,title,folder,x,y,z,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,contours,xlabel,ylabel,zlabel,cluster,logz
 charge_sum_5x5, ,main,ecal_charge_sum_5x5,0,0, ,kBlue,1000,0,40000,0,0,0,0,charge_{5x5} [ADC counts],ADC counts, , ,
-mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,15,46,61,15,1,16,25,eta,phi,ADC counts,0,0
-mean_sample_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,15,46,61,15,1,16,25,eta,phi,sampleindex,0,0
-mean_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
-std_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
-mean_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,0
-std_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
-baseline_integral, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,0
+mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,ADC counts,0,0
+mean_sample_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,sampleindex,0,0
+mean_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
+std_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
+mean_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,0
+std_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
+baseline_integral, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,0
 centroid, ,main,ecal_ieta_centroid,ecal_iphi_centroid,0, ,0,150,46,61,150,1,16,25,eta,phi,0,0,0
 iphi_centroid, ,ecal,ecal_iphi_centroid,0,0, ,kBlue,1500,1,16,0,0,0,0,phi_{centroid},crystals, , ,
 ieta_centroid, ,ecal,ecal_ieta_centroid,0,0, ,kBlue,1500,46,61,0,0,0,0,eta_{centroid},crystals, , ,
-mean_values_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak, ,0,15,46,61,15,1,16,1000,eta,phi,ADC counts,0,1
+mean_values_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
 charge_pos0_left_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , ,
 charge_pos1_center_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , ,
 charge_pos2_right_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , ,

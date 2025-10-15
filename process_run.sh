@@ -6,7 +6,7 @@ if [ "$#" -ne 3 ]; then
     exit 1
 fi
 RUN=$1
-SPILL=$(printf "%04d" $2)
+SPILL=$(printf "%04d" $((10#$2)))
 SPILL_NO=$((10#$SPILL))
 SPILL_LASER=10
 SPILL_REP=5
@@ -41,8 +41,8 @@ RECO_UNPACKED_OUTDIR="/eos/cms/store/group/dpg_ecal/comm_ecal/upgrade/testbeam/E
 mkdir -p ${RECO_UNPACKED_OUTDIR}/unpacked/run_$RUN/
 UNPACKED_FILE="${RECO_UNPACKED_OUTDIR}/unpacked/run_$RUN/run_${RUN}_spill_${SPILL}_unpacked.root"
 
-#EBETE_DIR="/afs/cern.ch/user/e/ecalgit/EBeTe/"
-EBETE_DIR="/afs/cern.ch/user/e/ecalgit/EBeTe_laser_preTB/"
+EBETE_DIR="/afs/cern.ch/user/e/ecalgit/EBeTe/"
+#EBETE_DIR="/afs/cern.ch/user/e/ecalgit/EBeTe_laser_preTB/"
 
 cd ${EBETE_DIR}
 
