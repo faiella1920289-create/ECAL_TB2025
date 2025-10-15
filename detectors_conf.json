@@ -14,7 +14,7 @@
                 "option": {
                     "ecal": {
                         "reco_conf": {
-                            "do_5x5": false,
+                            "do_5x5": false
                         }
                     }
                 }
