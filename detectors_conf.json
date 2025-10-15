@@ -15,7 +15,6 @@
                     "ecal": {
                         "reco_conf": {
                             "do_5x5": false,
-                            "save_some_waves": false
                         }
                     }
                 }
@@ -39,8 +38,9 @@
                 "charge_zerosup_peak_threshold": 10,
                 "seed_charge_threshold": 50,
                 "do_5x5": true,
-                "do_timing": false,
-                "save_some_waves": true
+                "do_timing": true,
+                "save_some_waves": true,
+                "sampling_rate": 0.16
             }
         },
 
@@ -60,7 +60,8 @@
                 "seed_charge_threshold": 50,
                 "do_5x5": false,
                 "do_timing": false,
-                "save_some_waves": true
+                "save_some_waves": true,
+                "sampling_rate": 0.08
             }
 	},
 
@@ -79,7 +80,8 @@
                 "seed_charge_threshold": 0,
                 "do_5x5": false,
                 "do_timing": true,
-                "save_some_waves": true
+                "save_some_waves": true,
+                "sampling_rate": 1
             }
         },
 

@@ -1,3 +1,4 @@
+
 import time, re, os, ROOT
 import numpy as np
 import traceback
@@ -13,9 +14,11 @@ def replace_index_noch(match):
     return f"uproot_dict['{var}']"
 
 def eval_formula(formula, data_dict):
-    if "(" in formula and "[" not in formula:
-      pattern = re.compile(r"(\w+)")
+    if "((" in formula:
+      pattern = re.compile(r"\(\(\s*(\w+)\s*\)\)")
       numpy_expr = pattern.sub(replace_index_noch, formula)
+      print(numpy_expr)
+
       result = eval(numpy_expr, {"uproot_dict": data_dict, "np": np})
 
       return result
@@ -27,6 +30,7 @@ def eval_formula(formula, data_dict):
 
     pattern = re.compile(r"(\w+)\[(\d+)\]")
     numpy_expr = pattern.sub(replace_index_axis1, formula)
+    print(numpy_expr)
     result = eval(numpy_expr, {"uproot_dict": data_dict, "np": np})
 
     return result

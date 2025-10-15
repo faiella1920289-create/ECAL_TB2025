@@ -100,7 +100,7 @@ def generic_reco(
   charge = np.sum(signal_window, axis=2)
   charge[mask_under_thr] = 0
 
-  tWave = np.repeat(np.arange(0, waves.shape[2])[np.newaxis, :], charge.shape[1], axis=0)
+  tWave = np.repeat(np.arange(0, waves.shape[2])[np.newaxis, :], charge.shape[1], axis=0)/sampling_rate
   tWave = np.repeat(tWave[np.newaxis, :], charge.shape[0], axis=0)
   ich = np.repeat(np.arange(0, waves.shape[1])[np.newaxis, :], charge.shape[0], axis=0)
 
@@ -176,10 +176,12 @@ def generic_reco(
   })
 
   if save_some_waves:
-    save_waves_mask = np.random.uniform(size=(waves.shape[0],)) > 0.01
-    waves[save_waves_mask, ...] = 0
-    tWave[save_waves_mask, ...] = 0
-    return_dict.update({f"{det}_waves": waves, f"{det}_tWave": tWave})
+    print(3/max(50, waves.shape[0]))
+    drop_waves_mask = np.random.uniform(size=(waves.shape[0],)) > 3/max(50, waves.shape[0])
+    print(drop_waves_mask)
+    waves[drop_waves_mask, ...] = 0
+    tWave[drop_waves_mask, ...] = 0
+    return_dict.update({f"{det}_waves": waves, f"{det}_tWave": tWave, f"{det}_wave_dropped": drop_waves_mask})
 
   return mask_selected_events, return_dict
 

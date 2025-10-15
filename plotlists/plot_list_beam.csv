@@ -33,3 +33,10 @@ hodo_spot_2_avg, ,hodo,hodo_x2_avg_pos,hodo_y2_avg_pos,0,hodo_x2_avg_pos!=-999 &
 bcp_clk_diff, ,main,n_event,bcp2_clk[0]-bcp2_clk_mean[0]-bcp1_clk[0]+bcp1_clk_mean[0],0, ,0,2000,-0.5,1999.5,100,-1,1,25,n_event,bcp2_clk - bcp1_clk, , ,
 bcp1_clk_diff, ,main,n_event,bcp1_clk[9]-bcp1_clk[0],0, ,0,2000,-0.5,1999.5,100,-1,1,25,n_event,bcp1_clk[9] - bcp1_clk[0], , ,
 bcp2_clk_diff, ,main,n_event,bcp2_clk[9]-bcp2_clk[0],0, ,0,2000,-0.5,1999.5,100,-1,1,25,n_event,bcp2_clk[9] - bcp2_clk[0], , ,
+#
+#seed_waveform_norm_shifted, ,ecal_wf,ecal_waves/ecal_peak,ecal_tWave-ecal_cf_time,,ecal_ieta_within_5x5 == 0 && ecal_iphi_within_5x5 == 0,0,40,0,40,15000,0,1.5,1000,Time (ns),ADC counts,,0,0
+#seed_waveform_norm_notshifted, ,ecal_wf,ecal_waves/ecal_peak,ecal_tWave,,ecal_ieta_within_5x5 == 0 && ecal_iphi_within_5x5 == 0,0,40,0,40,15000,0,1.5,1000,Time (ns),ADC counts,,0,0
+#seed_waveform_notnorm_notshifted, ,ecal_wf,ecal_waves,ecal_tWave,,ecal_ieta_within_5x5 == 0 && ecal_iphi_within_5x5 == 0,0,40,0,40,50000,0,50000,1000,Time (ns),ADC counts,,0,0
+ch100_waveform_norm_shifted, ,ecal_wf,"((ecal_tWave))[:, 100, :] - ((ecal_cf_time))[:, 100, np.newaxis]","((ecal_waves))[:, 100, :] / ((ecal_peak))[:, 100, np.newaxis]",0,ecal_wave_dropped == 0,0,40,-125,125,10000,-0.5,1.5,1000,Time (ns),ADC counts,,0,0
+ch100_waveform_norm_notshifted, ,ecal_wf,"((ecal_tWave))[:, 100, :]","((ecal_waves))[:, 100, :] / ((ecal_peak))[:, 100, np.newaxis]",0,ecal_wave_dropped == 0,0,40,0,250,10000,-0.5,1.5,1000,Time (ns),ADC counts,,0,0
+ch100_waveform_notnorm_notshifted, ,ecal_wf,"((ecal_tWave))[:, 100, :]","((ecal_waves))[:, 100, :]",0,ecal_wave_dropped == 0,0,40,0,250,10000,0,10000,1000,Time (ns),ADC counts,,0,0

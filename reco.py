@@ -76,11 +76,14 @@ def main(arguments):
             reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco(
               waves, detector, opt, id=chid_dict, geo_dict=geo_dict, **dd["reco_conf"]
             )
+            print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
         elif detector == "hodo":
             reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.hodo_reco(tree, detector)
+            print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
         elif detector == "bcp":
             bcp_clk = tree[dd["waves_branch"]].array(library="np")[:, active_ch_list, :]
             reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.bcp_reco(bcp_clk, detector)
+            print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
         print(""f"{detector} reco took {-time_reco_det + time.time():.1f} s")
     print(f"reco took: {-time_reco + time.time():.1f} s")
 
@@ -101,7 +104,7 @@ def main(arguments):
     # plotting
     time_plot = time.time()
     n_cpus = 8
-    plotconf_df = pd.read_csv(args.plot_list, sep=",", comment='#')
+    plotconf_df = pd.read_csv(args.plot_list, sep=",", comment='#', quotechar='"', engine='python')
     plotconf_df = plotconf_df.fillna("")
     ROOT.gROOT.LoadMacro("root_logon.C")
     # os.system(f"mkdir -p {args.plot_output_folder}")

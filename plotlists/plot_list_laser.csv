@@ -1,18 +1,20 @@
 name,title,folder,x,y,z,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,contours,xlabel,ylabel,zlabel,cluster,logz
-laser_mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,ADC counts,0,0
-laser_mean_sample_max, ,main,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,65,-0.5,64.5,10,-0.5,9.5,25,eta,phi,sampleindex,0,0
-laser_mean_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
-laser_std_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
-laser_mean_pedestals, ,main,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,0
-laser_std_pedestals, ,main,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
-laser_baseline_integral, ,main,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,0
-laser_mean_values_max, ,main,ecal_ieta,ecal_iphi,ecal_peak, ,0,65,-0.5,64.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
+laser_mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,65,-0.5,64.5,5,0.5,5.5,25,eta,phi,ADC counts,0,0
+laser_mean_sample_max, ,main,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,65,-0.5,64.5,5,0.5,5.5,25,eta,phi,sampleindex,0,0
+laser_mean_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,65,-0.5,64.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+laser_std_values, ,main,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 65,-0.5,64.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+laser_mean_pedestals, ,main,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,65,-0.5,64.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,0
+laser_std_pedestals, ,main,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,65,-0.5,64.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+laser_baseline_integral, ,main,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,65,-0.5,64.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,0
+laser_mean_values_max, ,main,ecal_ieta,ecal_iphi,ecal_peak, ,0,65,-0.5,64.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
 #
-mem_mean_charge, ,main,mem_ieta,mem_iphi,mem_charge, ,0,20,79.5,99.5,10,-0.5,9.5,25,eta,phi,ADC counts,0,0
-mem_mean_sample_max, ,main,mem_ieta,mem_iphi,mem_peak_pos, ,0,20,79.5,99.5,10,-0.5,9.5,25,eta,phi,sampleindex,0,0
-mem_mean_values, ,main,mem_ieta,mem_iphi,mem_samples_mean, ,0,20,79.5,99.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
-mem_std_values, ,main,mem_ieta,mem_iphi,mem_samples_std, ,0, 20,79.5,99.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
-mem_mean_pedestals, ,main,mem_ieta,mem_iphi,mem_baseline_mean, ,0,20,79.5,99.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,0
-mem_std_pedestals, ,main,mem_ieta,mem_iphi,mem_baseline_std, ,0,20,79.5,99.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
-mem_baseline_integral, ,main,mem_ieta,mem_iphi,mem_baseline_integral, ,0,20,79.5,99.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,0
-mem_mean_values_max, ,main,mem_ieta,mem_iphi,mem_peak, ,0,20,79.5,99.5,10,-0.5,9.5,1000,eta,phi,ADC counts,0,1
+mem_mean_charge, ,main,mem_ieta,mem_iphi,mem_charge, ,0,10,90.5,100.5,5,0.5,5.5,25,eta,phi,ADC counts,0,0
+mem_mean_sample_max, ,main,mem_ieta,mem_iphi,mem_peak_pos, ,0,10,90.5,100.5,5,0.5,5.5,25,eta,phi,sampleindex,0,0
+mem_mean_values, ,main,mem_ieta,mem_iphi,mem_samples_mean, ,0,10,90.5,100.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+mem_std_values, ,main,mem_ieta,mem_iphi,mem_samples_std, ,0, 10,90.5,100.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+mem_mean_pedestals, ,main,mem_ieta,mem_iphi,mem_baseline_mean, ,0,10,90.5,100.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,0
+mem_std_pedestals, ,main,mem_ieta,mem_iphi,mem_baseline_std, ,0,10,90.5,100.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+mem_baseline_integral, ,main,mem_ieta,mem_iphi,mem_baseline_integral, ,0,10,90.5,100.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,0
+mem_mean_values_max, ,main,mem_ieta,mem_iphi,mem_peak, ,0,10,90.5,100.5,5,0.5,5.5,1000,eta,phi,ADC counts,0,1
+#
+ch100_waveform_norm_shifted, ,ecal_wf,"((ecal_tWave))[:, 100, :] - ((ecal_cf_time))[:, 100, np.newaxis]","((ecal_waves))[:, 100, :] / ((ecal_peak))[:, 100, np.newaxis]",0,ecal_wave_dropped == 0,0,40,-125,125,10000,-0.5,1.5,1000,Time (ns),ADC counts,,0,0
