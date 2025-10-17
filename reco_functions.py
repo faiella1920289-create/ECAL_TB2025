@@ -1,7 +1,7 @@
 import numpy as np
 import awkward as ak
 from scipy import ndimage
-from multiprocessing import Pool
+import multiprocessing as mp
 
 def decode_ecal_waves(waves):
     bit13_mask = 1 << 13 #validity bit
@@ -228,8 +228,11 @@ def generic_reco_chunk(args):
     Wrapper to handle chunking for multiprocessing.
     """
     print("started chunk")
-    waves, det, opt, kwargs = args
-    return generic_reco(waves, det, opt, **kwargs)
+    try:
+        waves, det, opt, kwargs = args
+        return generic_reco(waves, det, opt, **kwargs)
+    except Exception:
+        print(traceback.format_exc(), file=sys.stderr, flush=True)
 
 
 def generic_reco_parallel(waves, detector_name, opt, n_cpus=2, **kwargs):
@@ -238,8 +241,19 @@ def generic_reco_parallel(waves, detector_name, opt, n_cpus=2, **kwargs):
     chunks = [(waves[i*chunk_size:(i+1)*chunk_size], detector_name, opt, kwargs)
               for i in range(n_cpus)]
 
-    with Pool(n_cpus) as pool:
-        results = pool.map(generic_reco_chunk, chunks)
+    print("opening pool")
+    results = [generic_reco_chunk(chunk) for chunk in chunks]
+
+#    try:
+#        ctx = mp.get_context("spawn")
+#        with ctx.Pool(n_cpus) as pool:
+#            results = pool.imap_unordered(generic_reco_chunk, chunks)
+#    except BrokenPipeError:
+#        print("\n\n\nRECO_PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
+#        for chunk in chunks: generic_reco_chunk(chunk)
+#    except Exception:
+#        print("\n\n\nRECO_PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
+#        for chunk in chunks: generic_reco_chunk(chunk)
 
     # Combine results
     masks_list, dicts_list = zip(*results)

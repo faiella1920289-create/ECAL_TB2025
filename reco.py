@@ -4,7 +4,7 @@ import numpy as np
 import reco_functions
 import pandas as pd
 import plot_functions_in_memory as plot_functions
-from multiprocessing import Pool
+import multiprocessing as mp
 
 
 def main(arguments):
@@ -54,6 +54,7 @@ def main(arguments):
     time_reco = time.time()
     reco_dict = {}
     for detector in detectors_dict:
+        print("reco {detector} ongoing")
         time_reco_det = time.time()
         if detector not in mode["detector_list"]: continue
         dd = detectors_dict[detector]
@@ -75,8 +76,9 @@ def main(arguments):
             if dd["decode"]: waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(waves)
             if dd["remove_last_50_samples"]: waves = waves[:, :, :-50]
             if dd["to_be_inverted"]: waves = 4096 - waves #must be inverted if the signal are with negative rising slope
-            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco_parallel(
-              waves, detector, opt, id=chid_dict, geo_dict=geo_dict, n_cpus=args.n_cpus, **dd["reco_conf"]
+            #not parallel anymore
+            reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco(
+              waves, detector, opt, id=chid_dict, geo_dict=geo_dict, **dd["reco_conf"], #n_cpus=args.n_cpus
             )
             print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
         elif detector == "hodo":
@@ -122,8 +124,19 @@ def main(arguments):
     print("starting plots in parallel")
     chunk_size = (len(plotconf_df) + args.n_cpus - 1) // args.n_cpus  # ceil division
     chunks = [(plotconf_df.iloc[i*chunk_size : (i+1)*chunk_size], arrays, args.plot_output_folder, {}) for i in range(args.n_cpus)]
-    with Pool(args.n_cpus) as pool:
-        pool.map(plot_functions.plot_chunk, chunks)
+
+#    try:
+#        ctx = mp.get_context("spawn")
+#        with ctx.Pool(args.n_cpus) as pool:
+#            pool.map(plot_functions.plot_chunk, chunks)
+#    except BrokenPipeError:
+#        print("\n\n\nPLOTS IN PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
+#        for chunk in chunks: plot_functions.plot_chunk(chunk)
+#    except Exception:
+#        print("\n\n\nPLOTS IN PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
+#        for chunk in chunks: plot_functions.plot_chunk(chunk)
+#
+    for chunk in chunks: plot_functions.plot_chunk(chunk)
     print(f"plotting took {-time_plot + time.time():.1f} s")
 
     #os.system(args.hadd_cmd) #goes in parallel

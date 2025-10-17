@@ -64,7 +64,7 @@ echo "Unpacked DONE for run $RUN spill $SPILL with EBeTe..."
 
 mkdir -p ${RECO_UNPACKED_OUTDIR}/reco/run_$RUN/
 mkdir $PLOT_MAIN_FOLDER/run_$RUN/
-PLOT_CURRENT_FOLDER=$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill/
+PLOT_CURRENT_FOLDER=$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE/
 
 mkdir $PLOT_CURRENT_FOLDER
 
@@ -94,7 +94,7 @@ end_time=$(date +%s)
 total_time=$((end_time - start_time))
 echo "Total elapsed time: $total_time seconds."
 
-cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
+cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE" "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill"
 
 echo $option
 if [ "$option" == "beam" ]; then

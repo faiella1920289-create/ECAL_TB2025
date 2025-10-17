@@ -34,9 +34,17 @@ tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
   if [ -e "$dest" ]; then
     #echo "File exists"
     hadd_cmd="hadd -a $dest $FILES"
+
+    root -l -b -q "fileCheck.C(\"$dest\", \"$name\")" | grep "FILE_OK"
+    if [ $? == 0 ]; then
+      echo "$dest contains histogram $name"
+    else
+      echo "$dest does not contain histogram $name or is zombie"
+      hadd_cmd="hadd $dest $FILES"
+    fi
   else
     #echo "File does not exist"
-    hadd_cmd="hadd $dest $FILES"
+    hadd_cmd="hadd -f $dest $FILES"
   fi
 
   bash -c "$hadd_cmd" > "${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/${subfolder}/${name}.log" 2>&1 &
@@ -60,7 +68,7 @@ if [ $? -eq 0 ]; then
   rm ${HADD_NOW_DIRS}
 else
   #echo "Files differ"
-  grep -Fvx -f ${HADD_NOW_DIRS} ${HADD_GLOB_BUFFER} > ../temp
+  grep -Fvx -f ${HADD_NOW_DIRS} ${HADD_GLOB_BUFFER} | grep run_${RUN_NO} > ../temp
   rm ${HADD_NOW_DIRS}
   cat ../temp > ${HADD_GLOB_BUFFER}
 fi

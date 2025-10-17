@@ -7,7 +7,7 @@ std_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 60,0.5,60.5,10,0.5,1
 mean_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
 std_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
 baseline_integral, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
-centroid, ,main,ecal_ieta_centroid,ecal_iphi_centroid,0, ,0,240.0,2.5,62.5,200.0,0.5,10.5,eta,phi,0,0,0,1
+centroid, ,main,ecal_ieta_centroid,ecal_iphi_centroid,0, ,0,240.0,0.5,60.5,200.0,0.5,10.5,1000,eta,phi,0,0,0,1
 iphi_centroid, ,ecal,ecal_iphi_centroid,0,0, ,kBlue,1000,0.5,10.5,0,0,0,0,phi_{centroid},crystals, , , ,
 ieta_centroid, ,ecal,ecal_ieta_centroid,0,0, ,kBlue,1200,60,0.5,60.5,0,0,0,eta_{centroid},crystals, , , ,
 mean_values_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
