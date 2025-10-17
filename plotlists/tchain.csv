@@ -1,0 +1,10 @@
+name,title,x,y,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,xlabel,ylabel,profilex
+#mcp0_eff_hodo_x,,(hodo_x1_cl0_pos+hodo_x2_cl0_pos)/2,mcp_charge[0] > 0,hodo_x1_single_cl_flag && hodo_x2_single_cl_flag,0,300,-15,15,2,-0.5,1.5,hodo_x,mcp_eff,1
+#mcp0_eff_hodo_y,,(hodo_y1_cl0_pos+hodo_y2_cl0_pos)/2,mcp_charge[0] > 0,hodo_y1_single_cl_flag && hodo_y2_single_cl_flag,0,300,-15,15,2,-0.5,1.5,hodo_x,mcp_eff,1
+#mcp1_eff_hodo_y,,(hodo_y1_cl0_pos+hodo_y2_cl0_pos)/2,mcp_charge[1] > 0,hodo_y1_single_cl_flag && hodo_y2_single_cl_flag,0,300,-15,15,2,-0.5,1.5,hodo_x,mcp_eff,1
+#mcp1_eff_hodo_x,,(hodo_x1_cl0_pos+hodo_x2_cl0_pos)/2,mcp_charge[1] > 0,hodo_x1_single_cl_flag && hodo_x2_single_cl_flag,0,300,-15,15,2,-0.5,1.5,hodo_x,mcp_eff,1
+#charge_seed_eff_hodo_y,,(hodo_y1_cl0_pos+hodo_y2_cl0_pos)/2,ecal_charge_seed > 0,hodo_y1_single_cl_flag && hodo_y2_single_cl_flag,0,300,-15,15,2,-0.5,1.5,hodo_x,seed_eff,1
+#charge_seed_eff_hodo_x,,(hodo_x1_cl0_pos+hodo_x2_cl0_pos)/2,ecal_charge_seed > 0,hodo_x1_single_cl_flag && hodo_x2_single_cl_flag,0,300,-15,15,2,-0.5,1.5,hodo_x,seed_eff,1
+harge_sum_5x5, ,ecal_charge_sum_5x5,0, ,kBlue,1000,0,40000,0,0,0,charge_{5x5} [ADC counts],ADC counts,0
+centroid_eta_hodo_x,,(hodo_x1_cl0_pos+hodo_x2_cl0_pos)/2,ecal_ieta_centroid,hodo_x1_single_cl_flag && hodo_x2_single_cl_flag,0,300,-15,15,600,0.5,61.5,hodo_x,ieta,0
+centroid_phi_hodo_y,,(hodo_y1_cl0_pos+hodo_y2_cl0_pos)/2,ecal_iphi_centroid,hodo_y1_single_cl_flag && hodo_y2_single_cl_flag,0,300,-15,15,100,0.5,10.5,hodo_y,iphi,0

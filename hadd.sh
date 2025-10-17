@@ -1,35 +1,70 @@
-run_no=$1
-plot_list=$2 #abs path
-n_spill=$3
-main_folder=$4
-option=$5
+PLOT_LIST=$1 #abs path
+MAIN_FOLDER=$2
 
-echo "conf: $conf"
+option="beam"
 
-mkdir ${main_folder}/run_$run_no/${option}_all_spill/
+MAX_JOBS=12
+
+HADD_NOW_DIRS="$MAIN_FOLDER/to_hadd_now.txt"
+HADD_GLOB_BUFFER="$MAIN_FOLDER/to_hadd_buffer.txt"
+
+RUN_NO=$(cat ${HADD_NOW_DIRS} | tail -n 1 | awk -F "run_" '{print $2}' | awk -F "/" '{print $1}')
+
+echo $RUN_NO
+
+mkdir ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
 
 echo "hadding (output in /dev/null - to debug open the code...)"
-for folder in $(ls -1d ${main_folder}/run_$run_no/${option}_current_spill/*/); do
-  mkdir ${main_folder}/run_$run_no/${option}_all_spill/$(basename $folder)
-  for file in $(ls -1 $folder/*.root); do
-    source="${main_folder}/run_$run_no/${option}_current_spill/$(basename $folder)/$(basename $file)"
-    dest="${main_folder}/run_$run_no/${option}_all_spill/$(basename $folder)/$(basename $file)"
 
-    filename=$(basename $file)
-    plot="${filename::-5}"
-    echo $plot
-    if [[ -n $(cat $plot_list | grep -v '#' | grep $plot) ]]; then
-      if [ ! -f $dest ]; then
-        cp $source $dest;
-      else
-        hadd -a $dest $source > /dev/null 2>&1;
-      fi
+/bin/cp ${MAIN_FOLDER}/*.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
+
+tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
+  #echo $plot
+  name=$(echo $plot | awk -F "," '{print $1}')
+  subfolder=$(echo $plot | awk -F "," '{print $3}')
+
+  #echo $name $subfolder
+
+  mkdir ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/$subfolder
+
+  FILES=$(cat ${HADD_NOW_DIRS} | grep run_${RUN_NO} | awk -v name="$name" -v sf="$subfolder" '{print $1"/"sf"/"name".root"}' | tr '\n' ' ')
+  echo $FILES
+  dest="${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/$subfolder/$name.root"
+
+  if [ -e "$dest" ]; then
+    #echo "File exists"
+    hadd_cmd="hadd -a $dest $FILES"
+  else
+    #echo "File does not exist"
+    hadd_cmd="hadd $dest $FILES"
+  fi
+
+  bash -c "$hadd_cmd" > "${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/${subfolder}/${name}.log" 2>&1 &
+
+  # Control max concurrency:
+  while true; do
+    # Count running hadd processes of this user
+    running_jobs=$(pgrep -cf "hadd")
+
+    if [ "$running_jobs" -lt "$MAX_JOBS" ]; then
+      break
     fi
+    sleep 5
   done
+
 done
 
-/bin/cp ${main_folder}/*.php ${main_folder}/run_$run_no/${option}_all_spill/
+diff ${HADD_NOW_DIRS} ${HADD_GLOB_BUFFER} > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+  rm ${HADD_GLOB_BUFFER}
+  rm ${HADD_NOW_DIRS}
+else
+  #echo "Files differ"
+  grep -Fvx -f ${HADD_NOW_DIRS} ${HADD_GLOB_BUFFER} > ../temp
+  rm ${HADD_NOW_DIRS}
+  cat ../temp > ${HADD_GLOB_BUFFER}
+fi
 
-python3 plot_hadded.py -po ${main_folder}/run_$run_no/${option}_all_spill/ -pl $plot_list
+python3 plot_hadded.py -po ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/ -pl $PLOT_LIST
 
-echo "----------------- hadd and plot-hadded done -----------------"
+#echo "----------------- hadd and plot-hadded done -----------------"

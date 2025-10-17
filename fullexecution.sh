@@ -96,18 +96,12 @@ echo "Total elapsed time: $total_time seconds."
 
 cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
 
-#
-## --- Saving plot for selected spills ---
-#if [ "$beam_or_laser" == "beam" ] || [ "$beam_or_laser" == "laser" ]; then
-#    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
-#        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
-#        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
-#
-#    fi
-#else
-#    if [ "$SPILL_NO" -lt "$SPILL_REP" ] || [ $((SPILL_NO % SPILL_LASER)) -eq 0 ] || [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
-#        echo ">>> Spill $SPILL_TYPE selezionato, salvo anche in $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE <<<"
-#        cp -rT "$PLOT_MAIN_FOLDER/run_$RUN/${option}_current_spill" "$PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE"
-#
-#    fi
-#fi
+echo $option
+if [ "$option" == "beam" ]; then
+  echo "writing folder path to hadd buffer"
+  echo $PLOT_MAIN_FOLDER/run_$RUN/spill_$SPILL_TYPE >> $PLOT_MAIN_FOLDER/to_hadd_buffer.txt
+fi
+
+if [ "$option" == "beam" ] && [ $((SPILL_NO % SPILL_REP)) -eq $((SPILL_REP - 1)) ]; then
+  cp $PLOT_MAIN_FOLDER/to_hadd_buffer.txt $PLOT_MAIN_FOLDER/to_hadd_now.txt
+fi
