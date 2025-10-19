@@ -4,7 +4,7 @@
             "beam": {
                 "plot_list": "plotlists/plot_list.csv",
                 "tree_name": "h4",
-                "detector_list": ["ecal", "mcp", "hodo", "bcp"],
+                "detector_list": ["ecal", "mcp", "hodo", "bcp", "digi_bcp_clock_reading"],
                 "option": null
             },
             "laser": {
@@ -31,7 +31,7 @@
             "to_be_inverted": false,
             "waves_branch": "xtal_sample",
             "generic_reco": true,
-            "remove_last_50_samples": false,
+            "remove_last_n_samples": 0,
             "geo_needed": true,
             "reco_conf": {
                 "signal_samples_pre_peak": 5,
@@ -54,7 +54,7 @@
             "waves_branch": "xtal_sample",
             "generic_reco": true,
             "geo_needed": true,
-            "remove_last_50_samples": false,
+            "remove_last_n_samples": 0,
             "reco_conf": {
                 "signal_samples_pre_peak": 5,
                 "signal_samples_post_peak": 10,
@@ -75,7 +75,7 @@
             "waves_branch": "dgtz_sample",
             "generic_reco": true,
             "geo_needed": false,
-            "remove_last_50_samples": true,
+            "remove_last_n_samples": 0,
             "reco_conf": {
                 "signal_samples_pre_peak": 12,
                 "signal_samples_post_peak": 15,
@@ -86,7 +86,36 @@
                 "save_some_waves": true,
                 "sampling_rate": 5,
                 "rise_samples_pre_peak": 10,
-                "rise_samples_post_peak": 2
+                "rise_samples_post_peak": 2,
+                "cf": 0.2,
+                "interpolation_factor": 40
+            }
+        },
+
+        "digi_bcp_clock_reading": {
+            "_comment": "null ch_map means all channels active, list is active chs, string is map filename",
+            "ch_map": [0],
+            "decode": false,
+            "to_be_inverted": false,
+            "waves_branch": "dgtz_sample",
+            "generic_reco": true,
+            "geo_needed": false,
+            "remove_last_n_samples": 993,
+            "reco_conf": {
+                "signal_samples_pre_peak": 12,
+                "signal_samples_post_peak": 15,
+                "charge_zerosup_peak_threshold": 0,
+                "seed_charge_threshold": 0,
+                "do_5x5": false,
+                "do_timing": true,
+                "save_some_waves": true,
+                "sampling_rate": 5,
+                "rise_samples_pre_peak": 10,
+                "rise_samples_post_peak": 3,
+                "timing_method": "fixed_thr",
+                "timing_thr": 1100,
+                "interpolation_factor": 40,
+                "baseline_subtract": false
             }
         },
 

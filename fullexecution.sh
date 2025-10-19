@@ -8,7 +8,7 @@ fi
 RUN=$1
 SPILL=$(printf "%04d" $((10#$2)))
 SPILL_NO=$((10#$SPILL))
-SPILL_LASER=10
+SPILL_LASER=3
 SPILL_REP=5
 beam_or_laser=$3
 if [ "$beam_or_laser" == "beam" ]; then
@@ -58,7 +58,7 @@ echo "Unpacking run $RUN spill $SPILL with EBeTe..."
 RAW_DIR="/eos/cms/store/group/dpg_ecal/comm_ecal/upgrade/testbeam/ECALTB_H4_Oct2025/EB/"
 #RAW_DIR="/eos/cms/store/group/dpg_ecal/comm_ecal/upgrade/testbeam/ECALTB_H4_Jul2023/EB"
 echo "./h4_raw2root ${RAW_DIR}/$RUN/$SPILL.raw ${UNPACKED_FILE}"
-./h4_raw2root ${RAW_DIR}/$RUN/$SPILL.raw ${UNPACKED_FILE}
+./h4_raw2root ${RAW_DIR}/$RUN/$SPILL.raw ${UNPACKED_FILE} > ${RECO_UNPACKED_OUTDIR}/DataTree/$RUN/${SPILL}.txt
 
 echo "Unpacked DONE for run $RUN spill $SPILL with EBeTe..."
 
@@ -70,7 +70,7 @@ mkdir $PLOT_CURRENT_FOLDER
 
 cd $WORKING_DIR
 
-/bin/cp *.php $PLOT_MAIN_FOLDER
+#/bin/cp *.php $PLOT_MAIN_FOLDER
 /bin/cp *.php $PLOT_MAIN_FOLDER/run_$RUN/
 /bin/cp *.php $PLOT_CURRENT_FOLDER
 

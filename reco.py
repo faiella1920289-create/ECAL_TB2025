@@ -54,9 +54,9 @@ def main(arguments):
     time_reco = time.time()
     reco_dict = {}
     for detector in detectors_dict:
-        print("reco {detector} ongoing")
         time_reco_det = time.time()
         if detector not in mode["detector_list"]: continue
+        print(f"reco {detector} ongoing")
         dd = detectors_dict[detector]
 
         reco_dict[detector], geo_dict, chid_dict = {}, None, None
@@ -74,7 +74,7 @@ def main(arguments):
         if dd["generic_reco"]:
             waves = tree[dd["waves_branch"]].array(library="np")[:, active_ch_list, :].astype(np.uint16)
             if dd["decode"]: waves, is_valid, gain_is_1 = reco_functions.decode_ecal_waves(waves)
-            if dd["remove_last_50_samples"]: waves = waves[:, :, :-50]
+            if dd["remove_last_n_samples"] != 0: waves = waves[:, :, : -dd["remove_last_n_samples"]]
             if dd["to_be_inverted"]: waves = 4096 - waves #must be inverted if the signal are with negative rising slope
             #not parallel anymore
             reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco(

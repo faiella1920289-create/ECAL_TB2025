@@ -1,25 +1,25 @@
 name,title,folder,x,y,z,cuts,color,binsnx,binsminx,binsmaxx,binsny,binsminy,binsmaxy,contours,xlabel,ylabel,zlabel,cluster,logz,tt
-charge_sum_5x5, ,main,ecal_charge_sum_5x5,0,0, ,kBlue,1000,0,40000,0,0,0,0,charge_{5x5} [ADC counts],ADC counts, , , ,
-mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,60,0.5,60.5,10,0.5,10.5,25,eta,phi,ADC counts,0,0,1
+charge_sum_5x5, ,main,ecal_charge_sum_5x5,0,0, ,kBlue,1000,0,40000,0,0,0,0,charge_{5x5} [charge x samples],charge x samples, , , ,
+mean_charge, ,main,ecal_ieta,ecal_iphi,ecal_charge, ,0,60,0.5,60.5,10,0.5,10.5,25,eta,phi,charge x samples,0,0,1
 mean_sample_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak_pos, ,0,60,0.5,60.5,10,0.5,10.5,25,eta,phi,sampleindex,0,0,1
-mean_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
-std_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
-mean_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
-std_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
-baseline_integral, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
+mean_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_mean, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,charge x samples,0,0,1
+std_values, ,ecal,ecal_ieta,ecal_iphi,ecal_samples_std, ,0, 60,0.5,60.5,10,0.5,10.5,1000,eta,phi,charge x samples,0,0,1
+mean_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_mean, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,charge x samples,0,0,1
+std_pedestals, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_std, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,charge x samples,0,0,1
+baseline_integral, ,ecal,ecal_ieta,ecal_iphi,ecal_baseline_integral, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,charge x samples,0,0,1
 centroid, ,main,ecal_ieta_centroid,ecal_iphi_centroid,0, ,0,240.0,0.5,60.5,200.0,0.5,10.5,1000,eta,phi,0,0,0,1
 iphi_centroid, ,ecal,ecal_iphi_centroid,0,0, ,kBlue,1000,0.5,10.5,0,0,0,0,phi_{centroid},crystals, , , ,
 ieta_centroid, ,ecal,ecal_ieta_centroid,0,0, ,kBlue,1200,60,0.5,60.5,0,0,0,eta_{centroid},crystals, , , ,
-mean_values_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,ADC counts,0,0,1
-charge_pos0_left_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos1_center_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos2_right_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos3_left_center, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==0,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos4_center, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==0,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos5_right_center, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==0,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos6_left_bottom, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==-1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos7_center_bottom, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==-1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
-charge_pos8_right_bottom, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==-1,kBlue,1000,0,40000,0,0,0,0,charge [ADC counts],ADC counts, , , ,
+mean_values_max, ,ecal,ecal_ieta,ecal_iphi,ecal_peak, ,0,60,0.5,60.5,10,0.5,10.5,1000,eta,phi,charge x samples,0,0,1
+charge_pos0_left_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos1_center_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos2_right_top, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==1,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos3_left_center, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==0,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos4_center, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==0,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos5_right_center, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==0,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos6_left_bottom, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==-1 && ecal_iphi_within_5x5==-1,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos7_center_bottom, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==0 && ecal_iphi_within_5x5==-1,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
+charge_pos8_right_bottom, ,ecal_single_charges,ecal_charge,0,0,ecal_ieta_within_5x5==1 && ecal_iphi_within_5x5==-1,kBlue,1000,0,40000,0,0,0,0,charge [charge x samples],charge x samples, , , ,
 amplitude_map_5x5, ,main,ecal_ieta_within_5x5,ecal_iphi_within_5x5,ecal_charge_divided_5x5,ecal_charge_sum_5x5 > 0,0,5,-2.5,2.5,5,-2.5,2.5,1000,eta,phi,charge_{ch}/charge_{5x5},1,1,
 mcp_delta_t, ,main,mcp_cf_time[1]-mcp_cf_time[0],0,0,mcp_charge[1]>0 && mcp_charge[0]>0 ,kBlue,8000,-40,40,0,0,0,0,MCP C.F. T_{2}-T_{1} [ns],ns, , , ,
 hodo_corr_x_single_cl, ,hodo,hodo_x1_cl0_pos,hodo_x2_cl0_pos,0,hodo_x2_single_cl_flag && hodo_x1_single_cl_flag,0,30,-15,15,30,-15,15,0,X_{1} [mm],X_{2} [mm],0,0,0,
@@ -33,4 +33,4 @@ hodo_spot_2_avg, ,hodo,hodo_x2_avg_pos,hodo_y2_avg_pos,0,hodo_x2_avg_pos!=-999 &
 bcp_clk_diff, ,main,n_event,bcp2_clk[0]-bcp2_clk_mean[0]-bcp1_clk[0]+bcp1_clk_mean[0],0, ,0,1000,-0.5,999.5,100,-1,1,25,n_event,bcp2_clk - bcp1_clk, , , ,
 bcp1_clk_diff, ,main,n_event,bcp1_clk[9]-bcp1_clk[0],0, ,0,1000,-0.5,999.5,100,-20,20,40,n_event,bcp1_clk[9] - bcp1_clk[0], , , ,
 bcp2_clk_diff, ,main,n_event,bcp2_clk[9]-bcp2_clk[0],0, ,0,1000,-0.5,999.5,100,-20,20,40,n_event,bcp2_clk[9] - bcp2_clk[0], , , ,
-seed_waveform_norm_shifted, ,ecal_wf,"((ecal_tWave))[:, ((ecal_seed_ch)).astype(int), :] - ((ecal_cf_time))[:, ((ecal_seed_ch)).astype(int), np.newaxis]","((ecal_waves))[:, ((ecal_seed_ch)).astype(int), :] / ((ecal_peak))[:, ((ecal_seed_ch)).astype(int), np.newaxis]",0,ecal_wave_dropped == 0,0,40,-125,125,10000,-0.5,1.5,1000,Time (ns),ADC counts, ,0,0,
+seed_waveform_norm_shifted, ,ecal_wf,"((ecal_tWave))[:, ((ecal_seed_ch)).astype(int), :] - ((ecal_cf_time))[:, ((ecal_seed_ch)).astype(int), np.newaxis]","((ecal_waves))[:, ((ecal_seed_ch)).astype(int), :] / ((ecal_peak))[:, ((ecal_seed_ch)).astype(int), np.newaxis]",0,ecal_wave_dropped == 0,0,40,-125,125,10000,-0.5,1.5,1000,Time (ns),charge x samples, ,0,0,
