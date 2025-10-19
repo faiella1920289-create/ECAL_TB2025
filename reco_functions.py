@@ -72,10 +72,10 @@ def find_5x5(charge_mean, ieta, iphi):
 
 def generic_reco(
   waves, detector_name, opt, id=None, geo_dict=None,
-  signal_samples_pre_peak=5, signal_samples_post_peak=10,
+  signal_samples_pre_peak: int=5, signal_samples_post_peak: int=10,
   charge_zerosup_peak_threshold=10, seed_charge_threshold=50,
   do_5x5=True, timing_method="cf", timing_thr=None, baseline_subtract=True,
-  do_timing=False, save_some_waves=True, rise_samples_pre_peak=5, rise_samples_post_peak=2, sampling_rate=5, cf=0.12, interpolation_factor=20, baseline_samples=10
+  do_timing=False, save_some_waves=True, rise_samples_pre_peak: int=5, rise_samples_post_peak: int=2, sampling_rate=5, cf=0.12, interpolation_factor=20, baseline_samples=10
 ):
 
   max_idx, baselines, baselines_std, baseline_integral, signal_window = split(waves, pre=signal_samples_pre_peak, post=signal_samples_post_peak)
@@ -155,7 +155,13 @@ def generic_reco(
     })
 
   if do_timing:
-    rise = signal_window[:, :, (signal_samples_pre_peak - rise_samples_pre_peak):(signal_samples_pre_peak + rise_samples_post_peak)]
+    if do_5x5: timing_mask = mask_5x5
+    else: timing_mask = np.full((signal_window.shape[1],), True)
+
+    timing_nch = int(np.sum(timing_mask))
+    print(f"timing nch: {timing_nch}")
+    rise = np.zeros((signal_window.shape[0], timing_nch, rise_samples_pre_peak+rise_samples_post_peak))
+    rise = signal_window[:, timing_mask, signal_samples_pre_peak - rise_samples_pre_peak:signal_samples_pre_peak + rise_samples_post_peak]
     rise_interp = ndimage.zoom(rise, [1, 1, interpolation_factor])
 
     if timing_method == "cf":
@@ -170,10 +176,12 @@ def generic_reco(
     else:
       raise NotImplemented(f"method: {timing_method} not implemented")
 
-    pseudo_t = np.argmax(rise_interp > np.repeat((thresholds)[:, :, np.newaxis], rise_interp.shape[2], axis=2), axis=2).astype(float)
-    pseudo_t += np.random.uniform(low=-0.5, high=0.5, size=pseudo_t.shape)
-    pseudo_t /= float(sampling_rate*interpolation_factor)
-    pseudo_t += ((max_idx - rise_samples_pre_peak) / sampling_rate)
+    pseudo_t = np.zeros((signal_window.shape[0], signal_window.shape[1]))
+    print(f"thresholds, rise_interp shapes: {thresholds.shape}, {rise_interp.shape}")
+    pseudo_t[:, timing_mask] = np.argmax(rise_interp > np.repeat((thresholds)[:, :, np.newaxis], rise_interp.shape[2], axis=2), axis=2).astype(float)
+    pseudo_t[:, timing_mask] += np.random.uniform(low=-0.5, high=0.5, size=(pseudo_t.shape[0], timing_nch))
+    pseudo_t[:, timing_mask] /= float(sampling_rate*interpolation_factor)
+    pseudo_t[:, timing_mask] += ((max_idx[:, timing_mask] - rise_samples_pre_peak) / sampling_rate)
     return_dict.update({f"{det}_{timing_method}_time": pseudo_t})
 
   return_dict.update({

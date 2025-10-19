@@ -4,7 +4,7 @@
             "beam": {
                 "plot_list": "plotlists/plot_list.csv",
                 "tree_name": "h4",
-                "detector_list": ["ecal", "mcp", "hodo", "bcp", "digi_bcp_clock_reading"],
+                "detector_list": ["ecal", "mcp", "hodo", "bcp"],
                 "option": null
             },
             "laser": {
@@ -39,9 +39,10 @@
                 "charge_zerosup_peak_threshold": 10,
                 "seed_charge_threshold": 50,
                 "do_5x5": true,
-                "do_timing": true,
+                "do_timing": false,
                 "save_some_waves": true,
-                "sampling_rate": 0.16
+                "sampling_rate": 0.16,
+                "interpolation_factor": 500
             }
         },
 
