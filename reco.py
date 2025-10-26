@@ -121,7 +121,6 @@ def main(arguments):
     if not os.path.exists(f"{args.plot_output_folder}/../jsroot_viewer.php"):
         os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/../jsroot_viewer.php")
 
-    print("starting plots in parallel")
     chunk_size = (len(plotconf_df) + args.n_cpus - 1) // args.n_cpus  # ceil division
     chunks = [(plotconf_df.iloc[i*chunk_size : (i+1)*chunk_size], arrays, args.plot_output_folder, {}) for i in range(args.n_cpus)]
 

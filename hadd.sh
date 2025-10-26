@@ -16,7 +16,8 @@ mkdir ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
 
 echo "hadding (output in /dev/null - to debug open the code...)"
 
-/bin/cp ${MAIN_FOLDER}/*.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
+#/bin/cp ${MAIN_FOLDER}/*.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
+/bin/cp/*.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
 
 tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
   #echo $plot

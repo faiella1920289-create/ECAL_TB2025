@@ -42,7 +42,7 @@ def plot(row, chain, outputfolder):
   else:
     print("profilex: ", row.profilex)
     hh = ROOT.TH2F(f"{name}", f"{row.title}", int(row.binsnx), float(row.binsminx), float(row.binsmaxx), int(row.binsny), float(row.binsminy), float(row.binsmaxy))
-    chain.Draw(f"{row.y}:{row.x}>>{name}", f"{cut}", "zcol")
+    chain.Draw(f"{row.y}:{row.x}>>{name}", f"{cut}", "colz")
     if not row.profilex: h = hh
     else:
       h = hh.ProfileX(f"prof_{name}")

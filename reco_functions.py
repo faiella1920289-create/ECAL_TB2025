@@ -50,23 +50,30 @@ def split(waveforms, threshold=20, pre=5, post=10, baseline_samples=10):
     return argmax_idx, baseline, baseline_std, baseline_integral, window_waveforms
 
 
-def find_5x5(charge_mean, ieta, iphi):
+def find_5x5(charge_mean, ieta, iphi, fixed_5x5=None):
     fake_mask = np.full(ieta.shape, True)
     mask_5x5 = np.full(ieta.shape, True)
 
+
     while True:
-      charge_mean[~fake_mask] = 0
-      seed_ch = np.argmax(charge_mean)
+      if fixed_5x5:
+          seed_ch = np.argmax(np.logical_and(ieta==fixed_5x5[0],iphi==fixed_5x5[1]))
+          print(f"Seed channel: {seed_ch}", flush=True)
+      else:
+        charge_mean[~fake_mask] = 0
+        seed_ch = np.argmax(charge_mean)
       ieta_seed, iphi_seed = ieta[seed_ch], iphi[seed_ch]
       mask_5x5 = np.logical_and(np.abs(ieta - ieta_seed) < 3, np.abs(iphi - iphi_seed) < 3)
       mask_5x5[seed_ch] = False
       seed_5x5_ratio = np.sum(charge_mean[mask_5x5]) * 24 / np.sum(mask_5x5) / charge_mean[seed_ch]
+      mask_5x5[seed_ch] = True
+      if fixed_5x5: return mask_5x5, seed_ch
       if seed_5x5_ratio < 0.2:
         fake_mask[seed_ch] = False
         continue
       else:
-        mask_5x5[seed_ch] = True
         break
+    print(f"Seed channel: {seed_ch}", flush=True)
     return mask_5x5, seed_ch
 
 
@@ -74,7 +81,7 @@ def generic_reco(
   waves, detector_name, opt, id=None, geo_dict=None,
   signal_samples_pre_peak: int=5, signal_samples_post_peak: int=10,
   charge_zerosup_peak_threshold=10, seed_charge_threshold=50,
-  do_5x5=True, timing_method="cf", timing_thr=None, baseline_subtract=True,
+  do_5x5=True, fixed_5x5=None, timing_method="cf", timing_thr=None, baseline_subtract=True,
   do_timing=False, save_some_waves=True, rise_samples_pre_peak: int=5, rise_samples_post_peak: int=2, sampling_rate=5, cf=0.12, interpolation_factor=20, baseline_samples=10
 ):
 
@@ -119,17 +126,20 @@ def generic_reco(
       charge_mean = np.mean(charge, axis=0)
       seed_ch = -999
 
-      mask_5x5, seed_ch = find_5x5(charge_mean, ieta, iphi)
-
+      mask_5x5, seed_ch = find_5x5(charge_mean, ieta, iphi, fixed_5x5=fixed_5x5)
       charge_seed = charge[:, seed_ch]
+      charge_sum_5x5 = np.sum(charge[:, mask_5x5], axis=1)
+
       mask_low_charge_seed = charge_seed > seed_charge_threshold
 
     # amplitude_map of the 5x5 matrix
-      charge_sum_5x5 = np.sum(charge[:, mask_5x5], axis=1)
+      w0=3.8
       charge_fraction_5x5 = charge / charge_sum_5x5[:, np.newaxis]
+      w_log = np.maximum(0.0,w0+np.log(charge / charge_sum_5x5[:, np.newaxis]))
+      w_log /= (np.sum(w_log, axis=1, keepdims=True))
 
-      ieta_centroid = charge_fraction_5x5[:, mask_5x5] @ ieta[mask_5x5]
-      iphi_centroid = charge_fraction_5x5[:, mask_5x5] @ iphi[mask_5x5]
+      ieta_centroid = w_log[:, mask_5x5] @ ieta[mask_5x5]
+      iphi_centroid = w_log[:, mask_5x5] @ iphi[mask_5x5]
 
       iphi_within_5x5 = iphi - iphi[seed_ch]
       ieta_within_5x5 = ieta - ieta[seed_ch]
@@ -170,7 +180,6 @@ def generic_reco(
       #return_dict.update({f"{det}_interp": interp})
 
     elif timing_method == "fixed_thr":
-      print(rise)
       thresholds = np.ones((rise.shape[0], rise.shape[1]))*timing_thr
 
     else:
@@ -185,14 +194,16 @@ def generic_reco(
     return_dict.update({f"{det}_{timing_method}_time": pseudo_t})
 
   return_dict.update({
-    f"{det}_peak_pos": max_idx, f"{det}_ich": ich,
+    f"{det}_peak_pos": max_idx, f"{det}_ich": ich, f"{det}_peak_time": max_idx/sampling_rate,
     f"{det}_samples_mean": values_mean, f"{det}_peak": values_max, f"{det}_samples_std": values_std,
     f"{det}_baseline_mean": baselines, f"{det}_baseline_std": baselines_std, f"{det}_baseline_integral": baseline_integral/baseline_samples*signal_window.shape[2],
     f"{det}_charge": charge
   })
 
   if save_some_waves:
-    drop_waves_mask = np.random.uniform(size=(waves.shape[0],)) > 3/max(50, waves.shape[0])
+    drop_waves_mask = np.ones(waves.shape[0], dtype=bool)
+    zero_indices = np.random.choice(waves.shape[0], size=min(10, waves.shape[0]), replace=False)
+    drop_waves_mask[zero_indices] = False
     waves[drop_waves_mask, ...] = 0
     tWave[drop_waves_mask, ...] = 0
     return_dict.update({f"{det}_waves": waves, f"{det}_tWave": tWave, f"{det}_wave_dropped": drop_waves_mask})

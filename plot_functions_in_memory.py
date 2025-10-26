@@ -227,6 +227,8 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
           h = ROOT.TH2F(name, row.title,
                       int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                       int(row.binsny), float(row.binsminy), float(row.binsmaxy))
+          print("x.shape: ", x.shape, flush=True)
+          print("y.shape: ", y.shape, flush=True)
           h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
 
         h.Draw("ZCOL")
