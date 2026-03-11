@@ -1,9 +1,13 @@
+
+start=$(date +%s%3N)  # milliseconds
+
+
 PLOT_LIST=$1 #abs path
 MAIN_FOLDER=$2
 
 option="beam"
 
-MAX_JOBS=12
+MAX_JOBS=14
 
 HADD_NOW_DIRS="$MAIN_FOLDER/to_hadd_now.txt"
 HADD_GLOB_BUFFER="$MAIN_FOLDER/to_hadd_buffer.txt"
@@ -17,9 +21,15 @@ mkdir ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
 echo "hadding (output in /dev/null - to debug open the code...)"
 
 #/bin/cp ${MAIN_FOLDER}/*.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
-/bin/cp/*.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
+/bin/cp/ *.php ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/
 
-tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
+#sed 's/^ *//' | grep "^[^#;]" removes whitespaces at begin of line, and lines that are comments (starting with #)
+
+pids=()
+
+header=$(head -n 1 $PLOT_LIST)
+
+tail -n +2 $PLOT_LIST | sed 's/^ *//' | grep "^[^#;]" | while read plot || [[ -n $plot ]]; do
   #echo $plot
   name=$(echo $plot | awk -F "," '{print $1}')
   subfolder=$(echo $plot | awk -F "," '{print $3}')
@@ -30,7 +40,8 @@ tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
 
   FILES=$(cat ${HADD_NOW_DIRS} | grep run_${RUN_NO} | awk -v name="$name" -v sf="$subfolder" '{print $1"/"sf"/"name".root"}' | tr '\n' ' ')
   echo $FILES
-  dest="${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/$subfolder/$name.root"
+  all_spill_dir="${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill"
+  dest="${all_spill_dir}/$subfolder/$name.root"
 
   if [ -e "$dest" ]; then
     #echo "File exists"
@@ -40,15 +51,22 @@ tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
     if [ $? == 0 ]; then
       echo "$dest contains histogram $name"
     else
-      echo "$dest does not contain histogram $name or is zombie"
-      hadd_cmd="hadd $dest $FILES"
+      echo "$dest does not contain histogram $name or is zombie - removing $dest"
+      rm $dest
+      hadd_cmd="hadd -f $dest $FILES"
     fi
   else
     #echo "File does not exist"
     hadd_cmd="hadd -f $dest $FILES"
   fi
 
-  bash -c "$hadd_cmd" > "${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/${subfolder}/${name}.log" 2>&1 &
+  echo -e $header"\n"$plot > ${all_spill_dir}//${name}.csv
+
+  echo "$hadd_cmd; python3 plot_hadded.py -po ${all_spill_dir}/ -pl ${all_spill_dir}/${name}.csv " > ${all_spill_dir}//${name}.sh
+
+  echo sending: $(cat ${all_spill_dir}/$name.sh)
+
+  bash "${all_spill_dir}/$name.sh" > "${all_spill_dir}/${subfolder}/${name}.log" 2>&1 &
 
   # Control max concurrency:
   while true; do
@@ -58,7 +76,7 @@ tail -n +2 $PLOT_LIST | grep -v '#' | while read plot || [[ -n $plot ]]; do
     if [ "$running_jobs" -lt "$MAX_JOBS" ]; then
       break
     fi
-    sleep 5
+    sleep 2
   done
 
 done
@@ -74,6 +92,11 @@ else
   cat ../temp > ${HADD_GLOB_BUFFER}
 fi
 
-python3 plot_hadded.py -po ${MAIN_FOLDER}/run_${RUN_NO}/${option}_all_spill/ -pl $PLOT_LIST
+wait
 
-#echo "----------------- hadd and plot-hadded done -----------------"
+end=$(date +%s%3N)
+elapsed=$((end - start))
+
+echo "Elapsed time: $elapsed ms"
+
+echo "----------------- hadd and plot-hadded done -----------------"

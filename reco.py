@@ -1,4 +1,5 @@
-import os, json, uproot, argparse, sys, time, ROOT
+
+import os, json, uproot, argparse, sys, time, ROOT, copy
 import awkward as ak
 import numpy as np
 import reco_functions
@@ -20,11 +21,13 @@ def main(arguments):
     parser.add_argument("-ro", f"--reco-output-dir", type=str, required=True, help="directory for reco output")
     parser.add_argument("-j", f"--detectors-conf-json", type=str, required=False, help="detectors reco configuration", default="conf.json")
     parser.add_argument("-ct", f"--compression-type", type=str, required=False, help="mcp reco configuration", default="lz4")
-    parser.add_argument("-p",  f"--plot-list", type=str, required=True, help="csv file with plot list")
-    parser.add_argument("-po", f"--plot-output-folder", type=str, required=True, help="output folder for plots")
+    parser.add_argument("-p",  f"--plot-list", type=str, required=False, help="csv file with plot list", default=None)
+    parser.add_argument("-po", f"--plot-output-folder", type=str, required=False, help="output folder for plots", default=None)
     parser.add_argument("-hd", f"--hadd-cmd", type=str, required=False, default="", help="command to hadd")
-    parser.add_argument("-opt", f"--option", type=str, required=True, help="beam or laser")
-    parser.add_argument("-n", f"--n-cpus", type=int, required=False, help="#cpus to use", default=2)
+    parser.add_argument("-opt", f"--option", type=str, required=True, help="electrons/pions/laser")
+    parser.add_argument("-n", f"--n-cpus", type=int, required=False, help="#cpus to use (if going parallel)", default=2)
+    parser.add_argument("-dp",  f"--do-plots", type=int, required=False, help="do plots?", default=1)
+
     args = parser.parse_args(arguments)
 
     # read detectors configuration
@@ -77,8 +80,10 @@ def main(arguments):
             if dd["remove_last_n_samples"] != 0: waves = waves[:, :, : -dd["remove_last_n_samples"]]
             if dd["to_be_inverted"]: waves = 4096 - waves #must be inverted if the signal are with negative rising slope
             #not parallel anymore
+            reco_conf = copy.deepcopy(json_dict["default_reco_conf"])
+            reco_conf.update(dd["reco_conf"])
             reco_dict[detector]["mask"], reco_dict[detector]["arrays"] = reco_functions.generic_reco(
-              waves, detector, opt, id=chid_dict, geo_dict=geo_dict, **dd["reco_conf"], #n_cpus=args.n_cpus
+              waves, detector, id=chid_dict, geo_dict=geo_dict, **reco_conf #n_cpus=args.n_cpus
             )
             print(f"{detector}, selected: {reco_dict[detector]['mask'].sum()} events")
         elif detector == "hodo":
@@ -105,40 +110,47 @@ def main(arguments):
     for branch in arrays: arrays[branch] = arrays[branch][mask_global, ...]
     print(f"merging took {-time_merge + time.time():.1f} s")
 
-    # plotting
-    time_plot = time.time()
-    plotconf_df = pd.read_csv(args.plot_list, sep=",", comment='#', quotechar='"', engine='python')
-    plotconf_df = plotconf_df.fillna("")
+    if args.do_plots:
+      # plotting
+      time_plot = time.time()
+      plotconf_df = pd.read_csv(args.plot_list, sep=",", comment='#', quotechar='"', engine='python')
+      plotconf_df = plotconf_df.fillna("")
 
-    ROOT.gROOT.LoadMacro("root_logon.C")
-    # os.system(f"mkdir -p {args.plot_output_folder}")
-    if not os.path.exists(f"{args.plot_output_folder}/index.php"):
-        os.system(f"cp {args.plot_output_folder}/../../index.php {args.plot_output_folder}/index.php")
-    if not os.path.exists(f"{args.plot_output_folder}/jsroot_viewer.php"):
-        os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/jsroot_viewer.php")
-    if not os.path.exists(f"{args.plot_output_folder}/../index.php"):
-        os.system(f"cp {args.plot_output_folder}/../../index.php {args.plot_output_folder}/../index.php")
-    if not os.path.exists(f"{args.plot_output_folder}/../jsroot_viewer.php"):
-        os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/../jsroot_viewer.php")
+      ROOT.gROOT.LoadMacro("root_logon.C")
+      # os.system(f"mkdir -p {args.plot_output_folder}")
+      if not os.path.exists(f"{args.plot_output_folder}/index.php"):
+          os.system(f"cp {args.plot_output_folder}/../../index.php {args.plot_output_folder}/index.php")
+      if not os.path.exists(f"{args.plot_output_folder}/jsroot_viewer.php"):
+          os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/jsroot_viewer.php")
+      if not os.path.exists(f"{args.plot_output_folder}/../index.php"):
+          os.system(f"cp {args.plot_output_folder}/../../index.php {args.plot_output_folder}/../index.php")
+      if not os.path.exists(f"{args.plot_output_folder}/../jsroot_viewer.php"):
+          os.system(f"cp {args.plot_output_folder}/../../jsroot_viewer.php {args.plot_output_folder}/../jsroot_viewer.php")
 
-    chunk_size = (len(plotconf_df) + args.n_cpus - 1) // args.n_cpus  # ceil division
-    chunks = [(plotconf_df.iloc[i*chunk_size : (i+1)*chunk_size], arrays, args.plot_output_folder, {}) for i in range(args.n_cpus)]
 
-#    try:
-#        ctx = mp.get_context("spawn")
-#        with ctx.Pool(args.n_cpus) as pool:
-#            pool.map(plot_functions.plot_chunk, chunks)
-#    except BrokenPipeError:
-#        print("\n\n\nPLOTS IN PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
-#        for chunk in chunks: plot_functions.plot_chunk(chunk)
-#    except Exception:
-#        print("\n\n\nPLOTS IN PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
-#        for chunk in chunks: plot_functions.plot_chunk(chunk)
-#
-    for chunk in chunks: plot_functions.plot_chunk(chunk)
-    print(f"plotting took {-time_plot + time.time():.1f} s")
+      f = ROOT.TFile(f"histos.root", "recreate")
 
-    #os.system(args.hadd_cmd) #goes in parallel
+      #plotconf_df.apply(lambda row: plot_functions.plot(row, reco_dict, f"{args.plot_output_folder}/", f), axis=1)
+      #f.Close()
+      chunk_size = (len(plotconf_df) + args.n_cpus - 1) // args.n_cpus  # ceil division
+      chunks = [(plotconf_df.iloc[i*chunk_size : (i+1)*chunk_size], arrays, args.plot_output_folder, {"f": f}) for i in range(args.n_cpus)]
+
+  #    try:
+  #        ctx = mp.get_context("spawn")
+  #        with ctx.Pool(args.n_cpus) as pool:
+  #            pool.map(plot_functions.plot_chunk, chunks)
+  #    except BrokenPipeError:
+  #        print("\n\n\nPLOTS IN PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
+  #        for chunk in chunks: plot_functions.plot_chunk(chunk)
+  #    except Exception:
+  #        print("\n\n\nPLOTS IN PARALLEL in broken pipe: FALLING BACK TO SERIAL\n\n")
+  #        for chunk in chunks: plot_functions.plot_chunk(chunk)
+  #
+      for chunk in chunks: plot_functions.plot_chunk(chunk)
+      f.Close()
+      print(f"plotting took {-time_plot + time.time():.1f} s")
+
+      #os.system(args.hadd_cmd) #goes in parallel
 
     # writing
     time_write = time.time()

@@ -1,4 +1,4 @@
-
+import json
 import time, re, os, ROOT, sys
 import numpy as np
 import traceback
@@ -123,7 +123,7 @@ def draw_TT_grid(hist, c):
 #     return cut_str
 
 
-def plot(row, uproot_dict, outputfolder, just_draw=False):
+def plot(row, uproot_dict, outputfolder, f=None, just_draw=False):
 
   try:
     os.makedirs(f"{outputfolder}/{row.folder}/", exist_ok=True)
@@ -139,7 +139,6 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
 
   print(f"outputfolder: {outputfolder}", file=sys.stderr, flush=True)
 
-  time_start = time.time()
 
   try:
     name = row['name']
@@ -148,8 +147,8 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
 
     os.makedirs(f"{outputfolder}/{row.folder}/", exist_ok=True)
 
-    f = ROOT.TFile(f"{outputfolder}/{row.folder}/{name}.root", ("update" if just_draw else "recreate"))
-    f.cd()
+    #f = ROOT.TFile(f"{outputfolder}/{row.folder}/{name}.root", ("update" if just_draw else "recreate"))
+    #f.cd()
 
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
@@ -173,6 +172,7 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         mask = np.ones((uproot_dict[first_key].shape[0],), dtype=bool)
       else:
         expr = convert_root_cut_to_numpy_expr(str(row.cuts), uproot_dict.keys())
+        print(expr)
         mask = eval(expr)
 
       x = eval_formula(row.x, uproot_dict)[mask]
@@ -185,7 +185,9 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
         else:
           h = ROOT.TH1F(name, row.title, int(row.binsnx), float(row.binsminx), float(row.binsmaxx))
 
+          time_fill = time.time()
           h.FillN(len(x), x.astype(np.float64), np.ones_like(x, dtype=np.float64))
+          print(f"fillN 1D took {time.time() - time_fill}", file=sys.stderr, flush=True)
 
         h.Draw("HIST")
         h.SetFillColorAlpha(ROOT.kBlue, 0.2)
@@ -229,7 +231,9 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
                       int(row.binsny), float(row.binsminy), float(row.binsmaxy))
           print("x.shape: ", x.shape, flush=True)
           print("y.shape: ", y.shape, flush=True)
+          time_fill = time.time()
           h.FillN(len(x), x.astype(np.float64), y.astype(np.float64), np.ones_like(x, dtype=np.float64))
+          print(f"fillN 2D took {time.time() - time_fill}", file=sys.stderr, flush=True)
 
         h.Draw("ZCOL")
         h.GetYaxis().SetTitle(row.ylabel)
@@ -243,15 +247,16 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
           n_ch = y_notflat.shape[1]
           y = y_notflat.ravel()
           z = eval_formula(row.z, uproot_dict)[mask].ravel()
-
           h = ROOT.TH2D(name, row.title,
                             int(row.binsnx), float(row.binsminx), float(row.binsmaxx),
                             int(row.binsny), float(row.binsminy), float(row.binsmaxy))
 
+          time_fill = time.time()
           h.FillN(len(x),
                 x.astype(np.float64),
                 y.astype(np.float64),
                 z.astype(np.float64)*n_ch)
+          print(f"fillN 2D took {time.time() - time_fill}", file=sys.stderr, flush=True)
 
         h.Scale(1/h.GetEntries())
         h.Draw("ZCOL")
@@ -269,19 +274,37 @@ def plot(row, uproot_dict, outputfolder, just_draw=False):
 
     h.GetXaxis().SetTitle(row.xlabel)
 
+    t_save = time.time()
+    #c.SaveAs(f"{outputfolder}/{row.folder}/{name}.png")
+    #print(f"saving png took {time.time() - t_save}s", file=sys.stderr, flush=True)
 
-    c.SaveAs(f"{outputfolder}/{row.folder}/{name}.png")
+    t_save = time.time()
     if just_draw: c.Write("", ROOT.TObject.kOverwrite)
     else:
+      #t_save = time.time()
       c.Write()
+      #print(f"writing canvas  took {time.time() - t_save}s", file=sys.stderr, flush=True)
+      t_save = time.time()
+      c.Print(f"{outputfolder}/{row.folder}/{name}_canvas.pdf")
+      print(f"printing canvas to PDF took {time.time() - t_save}s", file=sys.stderr, flush=True)
+      t_save = time.time()
       if str(row.y).strip() != "0" and str(row.z).strip() != "0": h.Scale(h.GetEntries())
+      print(f"rescaling h took {time.time() - t_save}s", file=sys.stderr, flush=True)
+      #t_save = time.time()
+      #h.SaveAs(f"{outputfolder}/{row.folder}/{name}_histo.root")
+      #print(f"writing histo withsaveas took {time.time() - t_save}s", file=sys.stderr, flush=True)
+      #t_save = time.time()
+      #ROOT.TBufferJSON.ExportToFile(f"{outputfolder}/{row.folder}/{name}_histo.json", h)
+      #print(f"writing histo to JSON took {time.time() - t_save}s", file=sys.stderr, flush=True)
+      #t_save = time.time()
       h.Write()
-    f.Close()
-    c.Close()
-    del c
-    del h
+    #f.Close()
+    #print(f"writing histo to file and saving .root took {time.time() - t_save}s", file=sys.stderr, flush=True)
+    #del c
+    #del h
 
-    print(f"{name} took {time.time() - time_start:.1f}s", file=sys.stderr, flush=True)
   except Exception:
     print(traceback.format_exc(), file=sys.stderr, flush=True)
+
+
 
