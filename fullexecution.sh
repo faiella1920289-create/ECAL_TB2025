@@ -42,7 +42,7 @@ SPILL_TYPE="${SPILL}_${option}"
 
 PLOT_MAIN_FOLDER="/eos/user/m/mcampana/www/h4dqm/ECAL_TB_2025"
 
-WORKING_DIR="/afs/cern.ch/user/e/ecalgit/ECAL_TB2025_laser_preTB"
+WORKING_DIR="/afs/cern.ch/user/e/ecalgit/ECAL_TB2026_dev/"
 
 # --- Start global timer ---
 start_time=$(date +%s)
