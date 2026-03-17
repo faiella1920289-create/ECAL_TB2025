@@ -11,4 +11,5 @@ Overview of the code:
     csv file with the list of the plots and the settings for each one
 
 for tests:
-run 17184
+run 19374
+
